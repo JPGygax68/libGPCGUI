@@ -1,0 +1,15 @@
+[submodule "testapp/external/libGPCGUIGLRenderer"]
+	path = testapp/external/libGPCGUIGLRenderer
+	url = https://github.com/JPGygax68/libGPCGUIGLRenderer.git
+[submodule "external/libGPCGUIGLRenderer"]
+	path = external/libGPCGUIGLRenderer
+	url = https://github.com/JPGygax68/libGPCGUIGLRenderer.git
+[submodule "external/libGPCGUIRenderer"]
+	path = external/libGPCGUIRenderer
+	url = https://github.com/JPGygax68/libGPCGUICanvas.git
+[submodule "external/libGPCGLUtils"]
+	path = external/libGPCGLUtils
+	url = https://github.com/JPGygax68/libGPCGLUtils.git
+[submodule "external/libGPCGLWrappers"]
+	path = external/libGPCGLWrappers
+	url = https://github.com/JPGygax68/libGPCGLWrappers.git

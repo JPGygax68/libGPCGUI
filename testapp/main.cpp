@@ -20,11 +20,17 @@ namespace {
         }
     };
 
+    struct SDLPlatform {
+        enum KeyCodes {
+            ESCAPE = SDLK_ESCAPE
+        };
+    };
+
 } // anon ns
 
 int main(int argc, char *argv[])
 {
-    typedef gpc::gui::gl::Renderer<true> renderer_t;
+    typedef gpc::gui::gl::Renderer<true> GLRenderer;
 
     try {
         SDL_Init(SDL_INIT_VIDEO);
@@ -43,11 +49,11 @@ int main(int argc, char *argv[])
         if (!gl_ctx) throw SDLError();
         //glewInit(); // should be done by GLRenderer
 
-        renderer_t renderer;
+        GLRenderer renderer;
 
         int w, h;
         SDL_GetWindowSize(window, &w, &h);
-        gpc::gui::RootWidget<renderer_t> root_widget(renderer, w, h);
+        gpc::gui::RootWidget<GLRenderer, SDLPlatform> root_widget(renderer, w, h);
 
         root_widget.init();
 
@@ -61,6 +67,9 @@ int main(int argc, char *argv[])
             SDL_GL_SwapWindow(window);
 
             if (!SDL_WaitEvent(&event)) throw SDLError();
+
+            if (event.type == SDL_QUIT) done = true;
+            else if (event.type == SDL_KEYDOWN) root_widget.key_down(event.key.keysym.sym);
         }
     }
     catch(const std::exception &e) {

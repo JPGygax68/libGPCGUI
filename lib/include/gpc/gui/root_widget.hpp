@@ -4,11 +4,16 @@ namespace gpc {
 
     namespace gui {
 
-        template <class Renderer>
+        template <class Renderer, class Platform>
         class RootWidget {
 
         public:
 
+            /** TODO: We create the root widget with an initial size; this is based on the assumption
+                that the display has already been created at this point. It might be better to
+                leave this to an attach() method rather than to involve the constructor - I haven't 
+                really decided yet.
+             */
             RootWidget(Renderer &renderer_, int w_, int h_): 
                 renderer(renderer_), width(w_), height(h_)
             {
@@ -23,7 +28,7 @@ namespace gpc {
                 bg_color = renderer.rgb_to_native({ 0, 0.5f, 1 });
             }
 
-            // TODO: make into virtual method
+            // TODO: make into virtual method in Widget base class
             // TODO: parameter for update region
             void repaint() 
             {
@@ -36,9 +41,17 @@ namespace gpc {
             }
 
             // TODO: make this virtual ?, with side-effects (reflow)
-            void setSize(int w, int h)
+            void set_size(int w, int h)
             {
                 // TODO
+            }
+
+            void key_down(int code)
+            {
+                // TODO: temporary, for testing only
+                if (code == Platform::KeyCodes::ESCAPE) {
+                    throw std::runtime_error("Ouch! You've hit my escape key!");
+                }
             }
 
         private:

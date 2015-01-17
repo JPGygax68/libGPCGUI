@@ -5,6 +5,7 @@
 //#include <gpc/gui/gui.hpp>
 #include <gpc/gui/root_widget.hpp>
 #include <gpc/gui/gl/renderer.hpp>
+#include <gpc/gui/pixel_grid/button.hpp>
 
 namespace {
 
@@ -56,6 +57,8 @@ int main(int argc, char *argv[])
         gpc::gui::RootWidget<GLRenderer, SDLPlatform> root_widget(renderer, w, h);
 
         root_widget.init();
+
+        gpc::gui::pixel_grid::Button<SDLPlatform, GLRenderer> button;
 
         SDL_Event event;
         bool done = false;

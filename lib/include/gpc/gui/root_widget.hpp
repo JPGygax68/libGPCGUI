@@ -1,11 +1,13 @@
 #pragma once
 
+#include "widget.hpp"
+
 namespace gpc {
 
     namespace gui {
 
         template <class Renderer, class Platform>
-        class RootWidget {
+        class RootWidget: public Widget<Renderer> {
 
         public:
 
@@ -14,7 +16,7 @@ namespace gpc {
                 leave this to an attach() method rather than to involve the constructor - I haven't 
                 really decided yet.
              */
-            RootWidget(Renderer &renderer_, int w_, int h_): 
+            RootWidget(Renderer &renderer_, offset_t w_, offset_t h_): 
                 renderer(renderer_), width(w_), height(h_)
             {
             }
@@ -56,7 +58,7 @@ namespace gpc {
 
         private:
             Renderer &renderer;
-            int width, height;
+            offset_t width, height;
             typename Renderer::native_color_t bg_color;
         };
 

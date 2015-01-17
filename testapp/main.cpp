@@ -52,21 +52,27 @@ int main(int argc, char *argv[])
 
         GLRenderer renderer;
 
+        renderer.init();
+
+        gpc::gui::RootWidget<SDLPlatform, GLRenderer> root_widget;
+
         int w, h;
         SDL_GetWindowSize(window, &w, &h);
-        gpc::gui::RootWidget<GLRenderer, SDLPlatform> root_widget(renderer, w, h);
-
-        root_widget.init();
+        root_widget.setBounds({0, 0}, {w, h});
 
         gpc::gui::pixel_grid::Button<SDLPlatform, GLRenderer> button;
+        button.setBounds({100, 100}, {200, 80});
+        root_widget.addChild(&button);
+
+        root_widget.init(&renderer);
 
         SDL_Event event;
         bool done = false;
         while (!done) {
 
-            // Repainting can be left to the root widget
-            root_widget.repaint();
-            // But swapping the window is specific to the platform
+            renderer.enter_context();
+            root_widget.repaint(&renderer, 0, 0);
+            renderer.leave_context();
             SDL_GL_SwapWindow(window);
 
             if (!SDL_WaitEvent(&event)) throw SDLError();

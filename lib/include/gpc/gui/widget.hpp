@@ -19,7 +19,7 @@ namespace gpc {
                 }
             };
 
-            struct size_t {
+            struct area_t {
                 length_t w, h;
             };
 
@@ -49,7 +49,7 @@ namespace gpc {
 
             // TODO: should this trigger a reflow or just set the _position & size in one go ?
 
-            void setBounds(const point_t &position_, const size_t &extents_) {
+            void setBounds(const point_t &position_, const area_t &extents_) {
                 _position = position_;
                 _size = extents_;
             }
@@ -65,7 +65,7 @@ namespace gpc {
             
         private:
             point_t _position;
-            size_t _size;
+            area_t _size;
             bool init_done;
         };
             

@@ -60,11 +60,13 @@ int main(int argc, char *argv[])
         SDL_GetWindowSize(window, &w, &h);
         root_widget.setBounds({0, 0}, {w, h});
 
+        root_widget.init(&renderer);
+
         gpc::gui::pixel_grid::Button<SDLPlatform, GLRenderer> button;
+        button.setFont(root_widget.defaultFont());
+        button.setCaption(L"Click me!");
         button.setBounds({100, 100}, {200, 80});
         root_widget.addChild(&button);
-
-        root_widget.init(&renderer);
 
         SDL_Event event;
         bool done = false;
@@ -78,7 +80,7 @@ int main(int argc, char *argv[])
             if (!SDL_WaitEvent(&event)) throw SDLError();
 
             if (event.type == SDL_QUIT) done = true;
-            else if (event.type == SDL_KEYDOWN) root_widget.key_down(event.key.keysym.sym);
+            else if (event.type == SDL_KEYDOWN) root_widget.keyDown(event.key.keysym.sym);
         }
     }
     catch(const std::exception &e) {

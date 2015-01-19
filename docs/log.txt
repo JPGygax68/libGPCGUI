@@ -1,0 +1,16 @@
+2015-01-19
+==========
+
+Todos at this point:
+
+- Decide how to handle auto-sizing of widgets:
+  - minWidth(), minHeight(): computed, set externally, or both ?
+  - or just silently adjust externally set size ?
+  - or interpret size = 0 as "auto" ?
+  
+- Trigger repaint when view-model state changes
+  - but avoid recursion crash
+  - actually a simple button doesn't have state
+  
+- Trigger repaint when view state changes
+  -> implement display region invalidate

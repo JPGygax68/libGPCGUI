@@ -14,6 +14,8 @@ namespace gpc {
             >
             class Button : public ButtonView<InputChannel, Renderer> {
             
+            public:
+                Button(Widget *parent_): ButtonView(parent_) {}
             };
             
         } // ns pixel_grid 

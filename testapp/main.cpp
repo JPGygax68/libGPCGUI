@@ -56,25 +56,22 @@ int main(int argc, char *argv[])
 
         gpc::gui::RootWidget<SDLPlatform, GLRenderer> root_widget;
 
-        int w, h;
-        SDL_GetWindowSize(window, &w, &h);
-        root_widget.setBounds({0, 0}, {w, h});
-
-        root_widget.init(&renderer);
-
-        gpc::gui::pixel_grid::Button<SDLPlatform, GLRenderer> button;
-        button.setFont(root_widget.defaultFont());
+        gpc::gui::pixel_grid::Button<SDLPlatform, GLRenderer> button(&root_widget);
         button.setCaption(L"Click me!");
         button.setBounds({100, 100}, {200, 80});
+
+        int w, h;
+        SDL_GetWindowSize(window, &w, &h);
+        root_widget.setCanvas(&renderer, w, h);
+
+        button.setFont(root_widget.defaultFont());
         root_widget.addChild(&button);
 
         SDL_Event event;
         bool done = false;
         while (!done) {
 
-            renderer.enter_context();
-            root_widget.repaint(&renderer, 0, 0);
-            renderer.leave_context();
+            root_widget.render();
             SDL_GL_SwapWindow(window);
 
             if (!SDL_WaitEvent(&event)) throw SDLError();

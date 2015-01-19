@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <utility>
 
@@ -19,36 +20,27 @@ namespace gpc {
         class RootWidget: public Container<Platform, Renderer> {
 
         public:
-            using Container<Platform, Renderer>::offset_t;
-            using Container::length_t;
+            typedef typename Renderer::offset_t offset_t;
+            typedef typename Renderer::length_t length_t;
             typedef typename Renderer::font_handle_t font_handle_t;
 
-            RootWidget() {}
+            RootWidget(): Container(nullptr), _renderer(nullptr) {}
 
-            void init(Renderer *renderer) override {
+            void setCanvas(Renderer *rend, length_t w, length_t h) {
 
-                renderer->define_viewport(0, 0, width(), height()); // TODO: this may not be the best spot to do this
-                bg_color = renderer->rgb_to_native({ 0, 0.5f, 1 });
-
-                registerFonts(renderer);
-
-                Container::init(renderer);
+                _renderer = rend;
+                setBounds({0, 0}, {w, h});
+                rend->define_viewport(0, 0, width(), height());
+                bg_color = rend->rgb_to_native({ 0, 0.5f, 1 });
+                registerFonts(rend);
+                init(rend);
             }
 
-            // TODO: make into virtual method in Widget base class
-            // TODO: parameter for update region
-            void repaint(Renderer *renderer, offset_t x_, offset_t y_) override {
+            void render() {
 
-                // TODO: replace the following dummy
-                renderer->fill_rect(x_ + x(), y_ + y(), width(), height(), bg_color);
-
-                Container::repaint(renderer, 0, 0);
-            }
-
-            // TODO: make this virtual ?, with side-effects (reflow)
-            void setSize(int w, int h)
-            {
-                // TODO
+                _renderer->enter_context();
+                repaint(_renderer, 0, 0);
+                _renderer->leave_context();
             }
 
             void keyDown(int code)
@@ -59,7 +51,19 @@ namespace gpc {
                 }
             }
 
-            auto defaultFont() const -> font_handle_t { return _default_font; }
+            auto defaultFont() const -> font_handle_t { assert(initialized()); return _default_font; }
+
+        protected:
+
+            // Moving this into protected space, should only be called from render()
+            // TODO: parameter for update region
+            void repaint(Renderer *_renderer, offset_t x_, offset_t y_) override {
+
+                // TODO: replace the following dummy
+                _renderer->fill_rect(x_ + x(), y_ + y(), width(), height(), bg_color);
+
+                Container::repaint(_renderer, 0, 0);
+            }
 
         private:
             typename Renderer::native_color_t bg_color;
@@ -72,12 +76,12 @@ namespace gpc {
                 return { data, sizeof(data) };
             }
 
-            void registerFonts(Renderer *renderer) {
+            void registerFonts(Renderer *_renderer) {
 
-                _default_font = registerFont(renderer, liberation_sans_regular_16_data());
+                _default_font = registerFont(_renderer, liberation_sans_regular_16_data());
             }
 
-            auto registerFont(Renderer *renderer, std::pair<const uint8_t *, size_t> data) -> font_handle_t {
+            auto registerFont(Renderer *_renderer, std::pair<const uint8_t *, size_t> data) -> font_handle_t {
 
                 struct membuf : std::streambuf {
                     membuf(char* begin, char* end) {
@@ -91,10 +95,11 @@ namespace gpc {
                 gpc::fonts::RasterizedFont rfont;
                 ar >> rfont;
 
-                return renderer->register_font(rfont);
+                return _renderer->register_font(rfont);
             }
 
             font_handle_t _default_font;
+            Renderer *_renderer;
         };
 
     } // ns gui

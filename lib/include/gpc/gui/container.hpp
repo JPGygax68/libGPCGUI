@@ -13,6 +13,8 @@ namespace gpc {
             //using Widget<InputChannel, Renderer>::offset_t;
             //using Widget::length_t;
 
+            Container(Widget *parent_): Widget(parent_) {}
+
             // TODO: Z order parameter ?
 
             void addChild(Widget *child) {
@@ -25,18 +27,20 @@ namespace gpc {
                 _children.remove(child);
             }
 
-            void doInit(Renderer *renderer) override {
+            void doInit(Renderer *rend) override {
 
                 for (auto child : _children) {
                     // TODO: init() guards against multiple execution - call doInit() instead ?
-                    child->init(renderer);
+                    child->init(rend);
                 }
             }
 
             void repaint(Renderer *renderer, offset_t x_, offset_t y_) override {
 
+                Widget::repaint(renderer, x_, x_);
+
                 for (auto child: _children) {
-                    child->repaint(renderer, x() + x_, y() + y_);
+                    child->repaint(renderer, x_, y_);
                 }
             }
 

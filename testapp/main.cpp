@@ -71,6 +71,8 @@ int main(int argc, char *argv[])
         bool done = false;
         while (!done) {
 
+            root_widget.updateGraphicResources();
+
             root_widget.render();
             SDL_GL_SwapWindow(window);
 

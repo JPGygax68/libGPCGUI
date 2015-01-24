@@ -13,7 +13,9 @@ namespace gpc {
             //using Widget<InputChannel, Renderer>::offset_t;
             //using Widget::length_t;
 
-            Container(Widget *parent_): Widget(parent_) {}
+            Container(Widget *parent_): Widget(parent_),
+                child_must_update_resources(false)
+            {}
 
             // TODO: Z order parameter ?
 
@@ -35,17 +37,35 @@ namespace gpc {
                 }
             }
 
-            void repaint(Renderer *renderer, offset_t x_, offset_t y_) override {
+            /** Override this if your Container-derived widget needs graphics resources of
+                its own, and do not forget to call updateChildrenGraphicResources().
+             */
+            void doUpdateGraphicResources(font_registry_t *font_reg) override {
 
-                Widget::repaint(renderer, x_, x_);
+                updateChildrenGraphicResources(font_reg);
+            }
+
+            void updateChildrenGraphicResources(font_registry_t *font_reg) {
 
                 for (auto child: _children) {
-                    child->repaint(renderer, x_, y_);
+                    if (child->mustUpdateGraphicResources()) {
+                        child->updateGraphicResources(font_reg);
+                    }
+                }
+            }
+
+            void repaint(Renderer *rend, offset_t x_, offset_t y_) override {
+
+                Widget::repaint(rend, x_, x_);
+
+                for (auto child: _children) {
+                    child->repaint(rend, x_, y_);
                 }
             }
 
         private:
             std::forward_list<Widget*> _children;
+            bool child_must_update_resources;
         };
 
     } // ns gui

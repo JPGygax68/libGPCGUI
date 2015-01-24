@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstdint>
 #include <utility>
+#include <map>
 
 #include <cereal/archives/binary.hpp>
 #include <cereal/cereal.hpp>
@@ -11,6 +12,7 @@
 #include <gpc/fonts/cereal.hpp>
 
 #include <gpc/gui/container.hpp>
+#include <gpc/gui/font_registry.hpp>
 
 namespace gpc {
 
@@ -24,7 +26,10 @@ namespace gpc {
             typedef typename Renderer::length_t length_t;
             typedef typename Renderer::font_handle_t font_handle_t;
 
-            RootWidget(): Container(nullptr), _renderer(nullptr) {}
+            RootWidget(): Container(nullptr), _renderer(nullptr) {
+
+                loadFonts();
+            }
 
             void setCanvas(Renderer *rend, length_t w, length_t h) {
 
@@ -32,7 +37,6 @@ namespace gpc {
                 setBounds({0, 0}, {w, h});
                 rend->define_viewport(0, 0, width(), height());
                 bg_color = rend->rgb_to_native({ 0, 0.5f, 1 });
-                registerFonts(rend);
                 init(rend);
             }
 
@@ -51,7 +55,16 @@ namespace gpc {
                 }
             }
 
-            auto defaultFont() const -> font_handle_t { assert(initialized()); return _default_font; }
+            // TODO: we are providing the raw rasterized font; the root widget however could
+            // also provide ready-for-use font handles
+            auto defaultFont() const -> font_t { return &_default_font; }
+
+            void updateGraphicResources() {
+
+                _font_registry.setRenderer(_renderer);
+
+                Widget::updateGraphicResources(&_font_registry);
+            }
 
         protected:
 
@@ -76,12 +89,17 @@ namespace gpc {
                 return { data, sizeof(data) };
             }
 
-            void registerFonts(Renderer *_renderer) {
+            void loadFonts() {
 
-                _default_font = registerFont(_renderer, liberation_sans_regular_16_data());
+                _default_font = loadFont(liberation_sans_regular_16_data());
             }
 
-            auto registerFont(Renderer *_renderer, std::pair<const uint8_t *, size_t> data) -> font_handle_t {
+            // TODO: font loading should delegated to an object available (or made available)
+            // to all widgets. That object should be managed by the root widget, though
+            // in certain cases (like OpenGL under Windows) it could be shared between
+            // all displays (and therefore multiple root widgets).
+
+            auto loadFont(std::pair<const uint8_t *, size_t> data) -> gpc::fonts::RasterizedFont {
 
                 struct membuf : std::streambuf {
                     membuf(char* begin, char* end) {
@@ -92,13 +110,15 @@ namespace gpc {
                 membuf sbuf((char*)(data.first), (char*)(data.first + data.second));
                 std::istream istr(&sbuf);
                 cereal::BinaryInputArchive ar(istr);
-                gpc::fonts::RasterizedFont rfont;
-                ar >> rfont;
+                gpc::fonts::RasterizedFont rast_font;
+                ar >> rast_font;
 
-                return _renderer->register_font(rfont);
+                return rast_font;
             }
 
-            font_handle_t _default_font;
+            gpc::fonts::RasterizedFont _default_font;
+            FontRegistry<Renderer> _font_registry;
+
             Renderer *_renderer;
         };
 

@@ -2,15 +2,24 @@
 
 #include <cassert>
 
+#include "font_registry.hpp"
+
 namespace gpc {
 
     namespace gui {
     
         template <class Platform, class Renderer>
+        class Container;
+
+        template <class Platform, class Renderer>
         class Widget {
         public:
+            typedef const gpc::fonts::RasterizedFont *font_t;
+            typedef typename FontRegistry<Renderer> font_registry_t;
+            typedef typename Container<Platform, Renderer> container_t;
             typedef typename Renderer::offset_t offset_t;
             typedef typename Renderer::length_t length_t;
+            typedef typename Renderer::font_handle_t font_handle_t;
             
             // TODO: decide whether Point and Extents should be defined by the renderer class instead of here.
             
@@ -25,7 +34,11 @@ namespace gpc {
                 length_t w, h;
             };
 
-            Widget(Widget *parent_): _parent(parent_), init_done(false) {}
+            Widget(Widget *parent_): 
+                _parent(parent_), 
+                init_done(false),
+                must_update_graphic_resources(false)
+            {}
 
             // Queries
 
@@ -49,11 +62,31 @@ namespace gpc {
                 }
             }
 
+            void flagForGraphicResourceUpdate() {
+
+                if (!must_update_graphic_resources) {
+                    must_update_graphic_resources = true;
+                    if (_parent) _parent->flagForGraphicResourceUpdate();
+                }
+            }
+
+            bool mustUpdateGraphicResources() const { return must_update_graphic_resources; }
+
+            void updateGraphicResources(font_registry_t *font_reg) {
+
+                if (must_update_graphic_resources) {
+                    doUpdateGraphicResources(font_reg);
+                    must_update_graphic_resources = false;
+                }
+            }
+
             virtual void repaint(Renderer *renderer, offset_t x, offset_t y) {
                 assert(init_done);
             }
 
             // TODO: should this trigger a reflow or just set the _position & size in one go ?
+
+            virtual auto preferredSize() -> area_t { return _size; }
 
             void setBounds(const point_t &position_, const area_t &extents_) {
                 _position = position_;
@@ -63,6 +96,8 @@ namespace gpc {
         protected:
         
             virtual void doInit(Renderer *rend) {}
+            
+            virtual void doUpdateGraphicResources(font_registry_t *font_reg) {}
 
             bool isPointInside(const point_t pt) const {
                 return pt.x >= _position.x && pt.x < (_position.x + _size.w)
@@ -74,6 +109,7 @@ namespace gpc {
             area_t _size;
             Widget *_parent;
             bool init_done;
+            bool must_update_graphic_resources;
         };
             
     } // ns gui

@@ -1,3 +1,37 @@
+2015-01-20 (evening)
+==========
+
+How to handle fonts and other resources that must eventually be handled by the GPU ?
+
+On the GUI side, fonts are actually (pointers to) RasterizedFont objects. A GPU-based renderer will usually have to process those objects and upload some of that data (namely, the pixels) into GPU memory, returning a handle to the caller that the caller must provide again to actually render text. I call the process of creating a renderer-specific handle from a RasterizedFont object "registering" the font with the renderer (but perhaps a better term can and should be found).
+
+Registering fonts is something that requires an active renderer, yet does not actually produce output. Because of that, it is probably a good idea to give user code a chance to trigger this independently of the rendering itself.
+
+The question arises whether or not a widget should be allowed to change its font(s) when it has already been renderered (and thus has obtained a renderer-specific handle for its font). The alternative would be to mandate that the widget be re-created in such as case. This might make the implementation of a GUI designer somewhat less easy, especially since the question of serialization has not been discussed at all yet.
+
+Assuming that yes, widgets can change fonts, the question arises how to manage this. Assigning a different rasterized font must trigger two things: releasing the old handle, and obtaining a new one. Both should take place before the next rendering pass, but not as a part of said rendering. And it cannot be done right away (synchronously), because the renderer is only available during rendering.
+
+Before going further, I must question that assertion. I have trouble coming up with a scenario where it would be difficult to get access to the renderer at an arbitrary time. Though it is conceivable to have a renderer that is incapable of doing any drawing except when being called from the windowing system, it is very unlikely that the renderer would not still be able to access its resource pool at any time - that would almost imply that the resource pool is only available from a specific thread. Which, come to think of it, is actually a possibility - is there a CPU/GPU combination where only a specific core is able to communicate with the GPU ?
+
+Thinking (and Googl'ing) some more, using a GL context (on which a renderer typically sits) from any thread *does* invite potential problems. In Windows for example, it is stated that a given GL context should only be made "current" in one thread at a time.
+
+So, to sum up, there are two ways to go here:
+
+- Decide that the renderer can be used at any time. This may make it necessary that the root widget call back to user code in order to "lock" the renderer. The advantage is that there is no need to defer registering and unlinking of renderer resources.
+
+- Or provide hooks for user code to call at opportune times (possibly, though not ideally, from different threads than the rendering thread). This implies either keeping lists of things to allocate and free, or setting "dirty" flags that propagate up the widget tree up to the root widget.
+
+
+2015-01-20
+==========
+
+The current approach to size calculations / layouting has a fundamental problem: it relies on the renderer for calculating text extents, which is nearly always needed when calculating the size and internal layout of a widget. 
+
+This is wrong in the sense that it is an unnecessary dependency: the pixel size of a piece of text will never depend on what renderer is being used to display things.
+
+That in itself is not a show-stopper. However, it makes it impossible to do layout calculations without passing the renderer around, which means that the "preferred size" of a widget cannot be treated like a (computed and read-only) property, but can only be obtained during an explicit layouting pass. This is impractical; in particular, it would make GUI designer tools cumbersome.
+
+
 2015-01-19
 ==========
 
@@ -14,3 +48,5 @@ Todos at this point:
   
 - Trigger repaint when view state changes
   -> implement display region invalidate
+  
+- Implement alignment

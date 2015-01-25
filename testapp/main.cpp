@@ -59,6 +59,10 @@ int main(int argc, char *argv[])
         gpc::gui::pixel_grid::Button<SDLPlatform, GLRenderer> button(&root_widget);
         button.setCaption(L"Click me!");
         button.setBounds({100, 100}, {200, 80});
+        button.addMouseEnterHandler([&](int x, int y) {
+            std::cout << "Mouse entering at: " << x << ", " << y << std::endl;
+            return true;
+        });
 
         int w, h;
         SDL_GetWindowSize(window, &w, &h);
@@ -80,6 +84,7 @@ int main(int argc, char *argv[])
 
             if (event.type == SDL_QUIT) done = true;
             else if (event.type == SDL_KEYDOWN) root_widget.keyDown(event.key.keysym.sym);
+            else if (event.type == SDL_MOUSEMOTION) root_widget.mouseMotion(event.motion.x, event.motion.y);
         }
 
         root_widget.releaseGraphicResources();

@@ -17,6 +17,13 @@ namespace gpc {
                 child_must_update_resources(false)
             {}
 
+            void mouseMotion(int x_, int y_) override {
+
+                for (auto child: _children) {
+                    child->mouseMotion(x_ - x(), y_ - y());
+                }
+            }
+
             // TODO: Z order parameter ?
 
             void addChild(Widget *child) {

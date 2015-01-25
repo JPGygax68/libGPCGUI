@@ -21,6 +21,9 @@ namespace gpc {
             typedef typename Renderer::length_t length_t;
             typedef typename Renderer::reg_font_t reg_font_t;
             
+            typedef std::function<bool(int, int)> mouse_enter_handler_t;
+            typedef std::function<bool(int, int)> mouse_exit_handler_t;
+
             // TODO: decide whether Point and Extents should be defined by the renderer class instead of here.
             
             struct point_t {
@@ -37,8 +40,23 @@ namespace gpc {
             Widget(Widget *parent_): 
                 _parent(parent_), 
                 init_done(false),
-                must_update_graphic_resources(false)
+                must_update_graphic_resources(false),
+                mouse_inside(false)
             {}
+
+            // Configuration
+
+            void addMouseEnterHandler(mouse_enter_handler_t handler) {
+
+                mouse_enter_handlers.push_back(handler);
+            }
+
+            void removeMouseEnterHandler(mouse_enter_handler_t handler) {
+
+                auto it = std::find(mouse_enter_handlers.begin(), mouse_enter_handlers.end(), handler);
+                assert(it != mouse_enter_handlers.end());
+                mouse_enter_handlers.erase(it);
+            }
 
             // Queries
 
@@ -59,6 +77,22 @@ namespace gpc {
                 if (!init_done) {
                     doInit(rend);
                     init_done = true;
+                }
+            }
+
+            virtual void mouseMotion(int x_, int y_) {
+
+                if (!mouse_inside) {
+                    if (isPointInside({x_, y_})) {
+                        mouse_inside = true;
+                        mouseEnter(x_, y_);
+                    }
+                }
+                else {
+                    if (!isPointInside({ x_, y_ })) {
+                        mouse_inside = false;
+                        mouseExit(x_, y_);
+                    }
                 }
             }
 
@@ -104,12 +138,31 @@ namespace gpc {
                     && pt.y >= _position.y && pt.y < (_position.y + _size.h);
             }
             
+            virtual void mouseEnter(int x_, int y_) {
+
+                for (auto &handler: mouse_enter_handlers) {
+                    if (handler(x_, y_)) break;
+                }
+            }
+
+            virtual void mouseExit(int x_, int y_) {
+
+                for (auto &handler : mouse_exit_handlers) {
+                    if (handler(x_, y_)) break;
+                }
+            }
+
         private:
             point_t _position;
             area_t _size;
             Widget *_parent;
+
+            std::vector<mouse_enter_handler_t> mouse_enter_handlers;
+            std::vector<mouse_exit_handler_t> mouse_exit_handlers;
+
             bool init_done;
             bool must_update_graphic_resources;
+            bool mouse_inside;
         };
             
     } // ns gui

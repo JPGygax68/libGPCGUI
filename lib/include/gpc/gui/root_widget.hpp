@@ -56,6 +56,8 @@ namespace gpc {
                 }
             }
 
+            //void mouseMotion(int x, int y) {}
+
             void requestTermination() { _term_req = true; }
 
             bool terminationRequested() { return _term_req; }

@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 
         SDL_Event event;
         bool done = false;
-        while (!done) {
+        while (!root_widget.terminationRequested()) {
 
             root_widget.updateGraphicResources();
 
@@ -81,6 +81,8 @@ int main(int argc, char *argv[])
             if (event.type == SDL_QUIT) done = true;
             else if (event.type == SDL_KEYDOWN) root_widget.keyDown(event.key.keysym.sym);
         }
+
+        root_widget.releaseGraphicResources();
     }
     catch(const std::exception &e) {
         std::cerr << e.what() << std::endl;

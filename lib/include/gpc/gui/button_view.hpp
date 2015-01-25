@@ -22,14 +22,14 @@ namespace gpc {
             typedef typename gpc::fonts::BoundingBox text_bbox_t;
             typedef typename Widget::point_t point_t;
             typedef typename ButtonViewModel::state_t state_t;
-            typedef typename Renderer::font_handle_t font_handle_t;
+            typedef typename Renderer::reg_font_t reg_font_t;
             typedef typename Renderer::native_color_t color_t;
         
             ButtonView(Widget *parent_): Widget(parent_),
                 layout_flag(false),
                 _rast_font(nullptr),
-                _reg_font(Renderer::INVALID_FONT_HANDLE),
-                _unreg_font(Renderer::INVALID_FONT_HANDLE) 
+                _reg_font(0),
+                _unreg_font(0)
             {}
 
             template <typename CharT = wchar_t>
@@ -44,7 +44,7 @@ namespace gpc {
                     if (_reg_font) _unreg_font = _reg_font;
                     _rast_font = rast_font;
                     // TODO: make sure font will be registered with Renderer before next use!
-                    _reg_font = Renderer::INVALID_FONT_HANDLE;
+                    _reg_font = 0;
                     flagForGraphicResourceUpdate();
                 }
             }
@@ -93,10 +93,10 @@ namespace gpc {
 
                 if (_unreg_font) {
                     font_reg->releaseFont(_reg_font);
-                    _reg_font = Renderer::INVALID_FONT_HANDLE;
+                    _reg_font = 0;
                 }
 
-                if (_rast_font && (_reg_font == Renderer::INVALID_FONT_HANDLE)) {
+                if (_rast_font && !_reg_font) {
                     _reg_font = font_reg->registerFont(_rast_font);
                 }
                 
@@ -109,7 +109,7 @@ namespace gpc {
 
                 rend->fill_rect(x_ + x(), y_ + y(), width(), height(), bg_color);
 
-                if (_reg_font != Renderer::INVALID_FONT_HANDLE) {
+                if (_reg_font) {
 
                     // TODO: text color
 
@@ -153,8 +153,8 @@ namespace gpc {
 
             font_t _rast_font;
             color_t bg_color;
-            font_handle_t _reg_font;
-            font_handle_t _unreg_font;
+            reg_font_t _reg_font;
+            reg_font_t _unreg_font;
             std::basic_string<char32_t> _caption;
             text_bbox_t text_bbox;
             point_t caption_origin;

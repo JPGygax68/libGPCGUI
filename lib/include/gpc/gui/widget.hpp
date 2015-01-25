@@ -19,7 +19,7 @@ namespace gpc {
             typedef typename Container<Platform, Renderer> container_t;
             typedef typename Renderer::offset_t offset_t;
             typedef typename Renderer::length_t length_t;
-            typedef typename Renderer::font_handle_t font_handle_t;
+            typedef typename Renderer::reg_font_t reg_font_t;
             
             // TODO: decide whether Point and Extents should be defined by the renderer class instead of here.
             

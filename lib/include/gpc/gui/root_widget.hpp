@@ -24,9 +24,9 @@ namespace gpc {
         public:
             typedef typename Renderer::offset_t offset_t;
             typedef typename Renderer::length_t length_t;
-            typedef typename Renderer::font_handle_t font_handle_t;
+            typedef typename Renderer::reg_font_t reg_font_t;
 
-            RootWidget(): Container(nullptr), _renderer(nullptr) {
+            RootWidget(): Container(nullptr), _renderer(nullptr), _term_req(false) {
 
                 loadFonts();
             }
@@ -51,9 +51,14 @@ namespace gpc {
             {
                 // TODO: temporary, for testing only
                 if (code == Platform::KeyCodes::ESCAPE) {
-                    throw std::runtime_error("Ouch! You've hit my escape key!");
+                    //throw std::runtime_error("Ouch! You've hit my escape key!");
+                    requestTermination();
                 }
             }
+
+            void requestTermination() { _term_req = true; }
+
+            bool terminationRequested() { return _term_req; }
 
             // TODO: we are providing the raw rasterized font; the root widget however could
             // also provide ready-for-use font handles
@@ -64,6 +69,11 @@ namespace gpc {
                 _font_registry.setRenderer(_renderer);
 
                 Widget::updateGraphicResources(&_font_registry);
+            }
+
+            void releaseGraphicResources() {
+
+                _font_registry.releaseAllFonts();
             }
 
         protected:
@@ -120,6 +130,8 @@ namespace gpc {
             FontRegistry<Renderer> _font_registry;
 
             Renderer *_renderer;
+
+            bool _term_req;
         };
 
     } // ns gui

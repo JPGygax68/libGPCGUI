@@ -54,21 +54,24 @@ int main(int argc, char *argv[])
 
         renderer.init();
 
-        typedef gpc::gui::Widget<SDLPlatform, GLRenderer> Widget;
+        typedef gpc::gui::Widget<SDLPlatform, GLRenderer> widget_t;
         gpc::gui::RootWidget<SDLPlatform, GLRenderer> root_widget;
 
         gpc::gui::pixel_grid::Button<SDLPlatform, GLRenderer> button(&root_widget);
         button.setCaption(L"Click me!");
         button.setBounds({100, 100}, {200, 80});
-        button.addMouseEnterHandler([&](Widget *widget, int x, int y) {
+        button.addMouseEnterHandler([&](widget_t *widget, int x, int y) {
             std::cout << "Mouse entering at: " << x << ", " << y << std::endl;
             return true;
         });
-        auto handler = button.addMouseExitHandler([&](Widget *widget, int x, int y) {
+        button.addMouseExitHandler([&](widget_t *widget, int x, int y) {
             std::cout << "Mouse exiting at: " << x << ", " << y << std::endl;
             return true;
         });
-        //button.dropMouseExitHandlers();
+        button.addMouseClickHandler([&](widget_t *widget, int button, int x, int y) {
+            std::cout << "Mouse click of button " << button << " at " << x << ", " << y << std::endl;
+            return true;
+        });
 
         int w, h;
         SDL_GetWindowSize(window, &w, &h);
@@ -89,9 +92,21 @@ int main(int argc, char *argv[])
 
             if (!SDL_WaitEvent(&event)) throw SDLError();
 
-            if (event.type == SDL_QUIT) done = true;
-            else if (event.type == SDL_KEYDOWN) root_widget.keyDown(event.key.keysym.sym);
-            else if (event.type == SDL_MOUSEMOTION) root_widget.mouseMotion(event.motion.x, event.motion.y);
+            if (event.type == SDL_QUIT) {
+                done = true;
+            }
+            else if (event.type == SDL_KEYDOWN) {
+                root_widget.keyDown(event.key.keysym.sym);
+            }
+            else if (event.type == SDL_MOUSEMOTION) {
+                root_widget.mouseMotion(event.motion.x, event.motion.y);
+            }
+            else if (event.type == SDL_MOUSEBUTTONDOWN) {
+                root_widget.mouseButtonDown(event.button.button, event.button.x, event.button.y);
+            }
+            else if (event.type == SDL_MOUSEBUTTONUP) {
+                root_widget.mouseButtonUp(event.button.button, event.button.x, event.button.y);
+            }
         }
 
         root_widget.releaseGraphicResources();

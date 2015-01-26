@@ -24,6 +24,24 @@ namespace gpc {
                 }
             }
 
+            void mouseButtonDown(int button, int x_, int y_) override {
+
+                int xr = x_ - x(), yr = y_ - y();
+
+                for (auto child : _children) {
+                    child->mouseButtonDown(button, xr, yr);
+                }
+            }
+
+            void mouseButtonUp(int button, int x_, int y_) override {
+
+                int xr = x_ - x(), yr = y_ - y();
+
+                for (auto child : _children) {
+                    child->mouseButtonUp(button, xr, yr);
+                }
+            }
+
             // TODO: Z order parameter ?
 
             void addChild(Widget *child) {

@@ -24,6 +24,9 @@ namespace gpc {
             
             typedef std::function<bool(Widget *, int, int)> mouse_enter_handler_t;
             typedef std::function<bool(Widget *, int, int)> mouse_exit_handler_t;
+            typedef std::function<bool(Widget *, int, int, int)> mouse_button_down_handler_t;
+            typedef std::function<bool(Widget *, int, int, int)> mouse_button_up_handler_t;
+            typedef std::function<bool(Widget *, int, int, int)> mouse_click_handler_t;
 
             // TODO: decide whether Point and Extents should be defined by the renderer class instead of here.
             
@@ -69,6 +72,39 @@ namespace gpc {
                 mouse_exit_handlers.clear();
             }
 
+            auto addMouseButtonDownHandler(mouse_button_down_handler_t handler) -> mouse_button_down_handler_t {
+
+                mouse_button_down_handlers.push_back(handler);
+                return handler;
+            }
+
+            void dropMouseButtonDownHandlers() {
+
+                mouse_button_down_handlers.clear();
+            }
+
+            auto addMouseButtonUpHandler(mouse_button_up_handler_t handler) -> mouse_button_up_handler_t {
+
+                mouse_button_up_handlers.push_back(handler);
+                return handler;
+            }
+
+            void dropMouseButtonUpHandlers() {
+
+                mouse_button_up_handlers.clear();
+            }
+
+            auto addMouseClickHandler(mouse_click_handler_t handler) -> mouse_click_handler_t {
+
+                mouse_click_handlers.push_back(handler);
+                return handler;
+            }
+
+            void dropMouseClickHandlers() {
+
+                mouse_click_handlers.clear();
+            }
+
             // Queries
 
             auto parent() -> Widget * const { return _parent; }
@@ -105,6 +141,22 @@ namespace gpc {
                         mouse_inside = false;
                         mouseExit(x_, y_);
                     }
+                }
+            }
+
+            virtual void mouseButtonDown(int button, int x_, int y_) {
+
+                mouse_down_point = {x_, y_};
+                mouse_down_button = button;
+            }
+
+            virtual void mouseButtonUp(int button, int x_, int y_) {
+
+                if (x_ >= (mouse_down_point.x - 1) && x_ < (mouse_down_point.x + 1) &&
+                    y_ >= (mouse_down_point.y - 1) && y_ < (mouse_down_point.y + 1) &&
+                    mouse_down_button == button )
+                {
+                    mouseClick(button, x_, y_);
                 }
             }
 
@@ -164,6 +216,13 @@ namespace gpc {
                 }
             }
 
+            virtual void mouseClick(int button, int x_, int y_) {
+
+                for (auto &handler : mouse_click_handlers) {
+                    if (handler(this, button, x_, y_)) break;
+                }
+            }
+
         private:
             point_t _position;
             area_t _size;
@@ -171,10 +230,15 @@ namespace gpc {
 
             std::vector<mouse_enter_handler_t> mouse_enter_handlers;
             std::vector<mouse_exit_handler_t> mouse_exit_handlers;
+            std::vector<mouse_button_down_handler_t> mouse_button_down_handlers;
+            std::vector<mouse_button_up_handler_t> mouse_button_up_handlers;
+            std::vector<mouse_click_handler_t> mouse_click_handlers;
 
             bool init_done;
             bool must_update_graphic_resources;
             bool mouse_inside;
+            point_t mouse_down_point;
+            int mouse_down_button;
         };
             
     } // ns gui

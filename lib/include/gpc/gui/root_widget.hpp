@@ -31,17 +31,26 @@ namespace gpc {
             void defineCanvas(Renderer *rend, length_t w, length_t h) {
 
                 _renderer = rend;
+
                 setBounds({0, 0}, {w, h});
                 rend->define_viewport(0, 0, width(), height());
                 bg_color = rend->rgb_to_native({ 0, 0.5f, 1 });
+
+                _font_registry.setRenderer(rend);
+
                 init(rend);
             }
 
-            void render() {
+            bool render() {
 
-                _renderer->enter_context();
-                repaint(_renderer, 0, 0);
-                _renderer->leave_context();
+                // TODO: support use of a constexpr to skip that check in case we do continuous rendering
+                if (mustRepaint()) {
+                    _renderer->enter_context();
+                    repaint(_renderer, 0, 0);
+                    _renderer->leave_context();
+                    return true;
+                }
+                else return false;
             }
 
             void keyDown(int code)
@@ -63,8 +72,6 @@ namespace gpc {
 
             void updateGraphicResources() {
 
-                _font_registry.setRenderer(_renderer);
-
                 Widget::updateGraphicResources(_renderer, &_font_registry);
             }
 
@@ -75,14 +82,19 @@ namespace gpc {
 
         protected:
 
+            void doInvalidate() override {
+
+                Platform::pushRepaintEvent();
+            }
+
             // Moving this into protected space, should only be called from render()
             // TODO: parameter for update region
-            void repaint(Renderer *_renderer, offset_t x_, offset_t y_) override {
+            void doRepaint(Renderer *_renderer, offset_t x_abs, offset_t y_abs) override {
 
                 // TODO: replace the following dummy
-                _renderer->fill_rect(x_ + x(), y_ + y(), width(), height(), bg_color);
+                _renderer->fill_rect(x_abs + x(), y_abs + y(), width(), height(), bg_color);
 
-                Container::repaint(_renderer, 0, 0);
+                repaintChildren(_renderer, 0, 0);
             }
 
         private:

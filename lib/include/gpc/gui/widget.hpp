@@ -35,16 +35,28 @@ namespace gpc {
                 bool operator == (const point_t &other) const {
                     return x == other.x && y == other.y;
                 }
+                auto operator + (const point_t &other) const -> point_t {
+                    return { x + other.x, y + other.y };
+                }
             };
 
             struct area_t {
                 length_t w, h;
             };
 
+            struct rect_t {
+                point_t position;
+                area_t size;
+                auto operator + (const point_t &offs) const -> rect_t {
+                    return { position + offs, size };
+                }
+            };
+
             Widget(Widget *parent_): 
                 _parent(parent_), 
                 init_done(false),
                 must_update_graphic_resources(true),
+                must_repaint(true),
                 mouse_inside(false)
             {}
 
@@ -111,14 +123,19 @@ namespace gpc {
             auto size() -> size_t const { return _size; }
             auto x() -> offset_t const { return _position.x; }
             auto y() -> offset_t const { return _position.y; }
-            auto width() -> length_t const { return _size.w; }
-            auto height() -> length_t const { return _size.h; }
+            auto position() const -> point_t { return _position; }
+            auto width() const -> length_t { return _size.w; }
+            auto height() const -> length_t { return _size.h; }
+            auto size() const -> area_t { return _size; }
             bool initialized() const { return init_done; }
             bool isMouseInside() const { return mouse_inside; }
+            bool mustUpdateGraphicResources() const { return must_update_graphic_resources; }
+            bool mustRepaint() const { return must_repaint; }
 
             /** The init() method must be called before actual rendering starts. It calls
                 the doInit() virtual method exactly once to give the widget a chance to
                 allocate resources from / register resources with the renderer.
+                TODO: still necessary now that there is updateGraphicResources() e.a. ?
              */
             virtual void init(Renderer *rend) {
                 
@@ -128,47 +145,47 @@ namespace gpc {
                 }
             }
 
-            virtual void mouseMotion(int x_, int y_) {
+            virtual void mouseMotion(int x_abs, int y_abs) {
 
                 if (!mouse_inside) {
-                    if (isPointInside({x_, y_})) {
+                    if (isPointInside({x_abs, y_abs})) {
                         mouse_inside = true;
-                        mouseEnter(x_, y_);
+                        mouseEnter(x_abs, y_abs);
                     }
                 }
                 else {
-                    if (!isPointInside({ x_, y_ })) {
+                    if (!isPointInside({ x_abs, y_abs })) {
                         mouse_inside = false;
-                        mouseExit(x_, y_);
+                        mouseExit(x_abs, y_abs);
                     }
                 }
             }
 
-            virtual void mouseButtonDown(int button, int x_, int y_) {
+            virtual void mouseButtonDown(int button, int x_abs, int y_abs) {
 
-                mouse_down_point = {x_, y_};
-                mouse_down_button = button;
-            }
-
-            virtual void mouseButtonUp(int button, int x_, int y_) {
-
-                if (x_ >= (mouse_down_point.x - 1) && x_ < (mouse_down_point.x + 1) &&
-                    y_ >= (mouse_down_point.y - 1) && y_ < (mouse_down_point.y + 1) &&
-                    mouse_down_button == button )
-                {
-                    mouseClick(button, x_, y_);
+                if (isPointInside({x_abs, y_abs})) {
+                    mouse_down_point = {x_abs, y_abs};
+                    mouse_down_button = button;
                 }
             }
 
-            void flagForGraphicResourceUpdate() {
+            virtual void mouseButtonUp(int button, int x_abs, int y_abs) {
+
+                if (x_abs >= (mouse_down_point.x - 1) && x_abs < (mouse_down_point.x + 1) &&
+                    y_abs >= (mouse_down_point.y - 1) && y_abs < (mouse_down_point.y + 1) &&
+                    mouse_down_button == button)
+                {
+                    mouseClick(button, x_abs, y_abs);
+                }
+            }
+
+            void queueResourceUpdate() {
 
                 if (!must_update_graphic_resources) {
                     must_update_graphic_resources = true;
-                    if (_parent) _parent->flagForGraphicResourceUpdate();
+                    if (_parent) _parent->queueResourceUpdate();
                 }
             }
-
-            bool mustUpdateGraphicResources() const { return must_update_graphic_resources; }
 
             void updateGraphicResources(Renderer *rend, font_registry_t *font_reg) {
 
@@ -178,8 +195,25 @@ namespace gpc {
                 }
             }
 
-            virtual void repaint(Renderer *renderer, offset_t x, offset_t y) {
+            void invalidate() {
+
+                if (!must_repaint) {
+                    must_repaint = true;
+                    if (_parent) _parent->invalidate();
+                    doInvalidate();
+                }
+            }
+
+            bool repaint(Renderer *rend, offset_t x_abs, offset_t y_abs) {
+                
                 assert(init_done);
+
+                if (must_repaint) {
+                    doRepaint(rend, x_abs, y_abs);
+                    must_repaint = false;
+                    return true;
+                }
+                else return false;
             }
 
             // TODO: should this trigger a reflow or just set the _position & size in one go ?
@@ -197,29 +231,39 @@ namespace gpc {
             
             virtual void doUpdateGraphicResources(Renderer *rend, font_registry_t *font_reg) {}
 
+            virtual void doInvalidate() {}
+
+            virtual void doRepaint(Renderer *rend, offset_t x_abs, offset_t y_abs) = 0;
+
             bool isPointInside(const point_t pt) const {
                 return pt.x >= _position.x && pt.x < (_position.x + _size.w)
                     && pt.y >= _position.y && pt.y < (_position.y + _size.h);
             }
             
-            virtual void mouseEnter(int x_, int y_) {
+            virtual void mouseEnter(int x_abs, int y_abs) {
 
                 for (auto &handler: mouse_enter_handlers) {
-                    if (handler(this, x_, y_)) break;
+                    if (handler(this, x_abs, y_abs)) return; // this prevents automatic invalidation
                 }
+
+                // TODO: make this dependent upon a flag ("invalidate on hover") ?
+                invalidate();
             }
 
-            virtual void mouseExit(int x_, int y_) {
+            virtual void mouseExit(int x_abs, int y_abs) {
 
                 for (auto &handler : mouse_exit_handlers) {
-                    if (handler(this, x_, y_)) break;
+                    if (handler(this, x_abs, y_abs)) return; // this prevents automatic invalidation
                 }
+
+                // TODO: make this dependent upon a flag ("invalidate on hover") ?
+                invalidate();
             }
 
-            virtual void mouseClick(int button, int x_, int y_) {
+            virtual void mouseClick(int button, int x_abs, int y_abs) {
 
                 for (auto &handler : mouse_click_handlers) {
-                    if (handler(this, button, x_, y_)) break;
+                    if (handler(this, button, x_abs, y_abs)) break;
                 }
             }
 
@@ -236,6 +280,7 @@ namespace gpc {
 
             bool init_done;
             bool must_update_graphic_resources;
+            bool must_repaint;
             bool mouse_inside;
             point_t mouse_down_point;
             int mouse_down_button;

@@ -1,3 +1,13 @@
+2015-01-26
+==========
+
+- GUI: "forced repaint" mode for when using double buffering or buffer must be redrawn for any other reason ?
+  - Renderer parameter ? const parameter ?
+
+- Order: layout - graphic resources - paint
+
+- TODO: x_abs and y_abs are ill-named
+
 2015-01-25
 ==========
 

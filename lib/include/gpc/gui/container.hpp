@@ -10,32 +10,30 @@ namespace gpc {
         template <class InputChannel, class Renderer>
         class Container: public Widget<InputChannel, Renderer> {
         public:
-            //using Widget<InputChannel, Renderer>::offset_t;
-            //using Widget::length_t;
 
             Container(Widget *parent_): Widget(parent_),
                 child_must_update_resources(false)
             {}
 
-            void mouseMotion(int x_, int y_) override {
+            void mouseMotion(int x_abs, int y_abs) override {
 
                 for (auto child: _children) {
-                    child->mouseMotion(x_ - x(), y_ - y());
+                    child->mouseMotion(x_abs - x(), y_abs - y());
                 }
             }
 
-            void mouseButtonDown(int button, int x_, int y_) override {
+            void mouseButtonDown(int button, int x_abs, int y_abs) override {
 
-                int xr = x_ - x(), yr = y_ - y();
+                int xr = x_abs - x(), yr = y_abs - y();
 
                 for (auto child : _children) {
                     child->mouseButtonDown(button, xr, yr);
                 }
             }
 
-            void mouseButtonUp(int button, int x_, int y_) override {
+            void mouseButtonUp(int button, int x_abs, int y_abs) override {
 
-                int xr = x_ - x(), yr = y_ - y();
+                int xr = x_abs - x(), yr = y_abs - y();
 
                 for (auto child : _children) {
                     child->mouseButtonUp(button, xr, yr);
@@ -79,12 +77,17 @@ namespace gpc {
                 }
             }
 
-            void repaint(Renderer *rend, offset_t x_, offset_t y_) override {
+        protected:
 
-                Widget::repaint(rend, x_, x_);
+            void doRepaint(Renderer *rend, offset_t x_abs, offset_t y_abs) override {
 
-                for (auto child: _children) {
-                    child->repaint(rend, x_, y_);
+                repaintChildren(rend, x_abs, y_abs);
+            }
+
+            void repaintChildren(Renderer *rend, offset_t x_abs, offset_t y_abs) {
+
+                for (auto child : _children) {
+                    child->repaint(rend, x_abs, y_abs);
                 }
             }
 

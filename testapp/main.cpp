@@ -22,9 +22,31 @@ namespace {
     };
 
     struct SDLPlatform {
+        
         enum KeyCodes {
             ESCAPE = SDLK_ESCAPE
         };
+
+        static void init() {
+
+            repaint_event_id() = SDL_RegisterEvents(1);
+            assert(repaint_event_id > 0);
+        }
+
+        // TODO: this might well be useless
+
+        static void pushRepaintEvent() {
+
+            SDL_Event event;
+            SDL_zero(event);
+            event.type = repaint_event_id();
+            SDL_PushEvent(&event);
+        }
+
+        static Uint32 & repaint_event_id() {
+            static Uint32 id = 0;
+            return id;
+        }
     };
 
 } // anon ns
@@ -50,6 +72,8 @@ int main(int argc, char *argv[])
         if (!gl_ctx) throw SDLError();
         //glewInit(); // should be done by GLRenderer
 
+        SDLPlatform::init();
+
         GLRenderer renderer;
 
         renderer.init();
@@ -62,23 +86,25 @@ int main(int argc, char *argv[])
         button.setBounds({100, 100}, {200, 80});
         button.addMouseEnterHandler([&](widget_t *widget, int x, int y) {
             std::cout << "Mouse entering at: " << x << ", " << y << std::endl;
-            return true;
+            return false;
         });
         button.addMouseExitHandler([&](widget_t *widget, int x, int y) {
             std::cout << "Mouse exiting at: " << x << ", " << y << std::endl;
+            return false;
+        });
+        button.addMouseClickHandler([&](widget_t *widget, int btn, int x, int y) {
+            std::cout << "Mouse click of button " << btn << " at " << x << ", " << y << std::endl;
+            button.setColor({1, 0.25f, 0});
+            button.setHoverColor({ 1, 0.35f, 0.1f });
             return true;
         });
-        button.addMouseClickHandler([&](widget_t *widget, int button, int x, int y) {
-            std::cout << "Mouse click of button " << button << " at " << x << ", " << y << std::endl;
-            return true;
-        });
+
+        button.setFont(root_widget.defaultFont());
+        root_widget.addChild(&button);
 
         int w, h;
         SDL_GetWindowSize(window, &w, &h);
         root_widget.defineCanvas(&renderer, w, h);
-
-        button.setFont(root_widget.defaultFont());
-        root_widget.addChild(&button);
 
         SDL_Event event;
         bool done = false;
@@ -86,9 +112,9 @@ int main(int argc, char *argv[])
 
             root_widget.updateGraphicResources();
 
-            // TODO: support updating only when view state has changed
-            root_widget.render();
-            SDL_GL_SwapWindow(window);
+            if (root_widget.render()) {
+                SDL_GL_SwapWindow(window);
+            }
 
             if (!SDL_WaitEvent(&event)) throw SDLError();
 
@@ -106,6 +132,9 @@ int main(int argc, char *argv[])
             }
             else if (event.type == SDL_MOUSEBUTTONUP) {
                 root_widget.mouseButtonUp(event.button.button, event.button.x, event.button.y);
+            }
+            else if (event.type == SDLPlatform::repaint_event_id()) {
+                std::cout << "repaint event received" << std::endl;
             }
         }
 

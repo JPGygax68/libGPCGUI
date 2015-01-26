@@ -25,7 +25,7 @@ namespace gpc {
             typedef typename Renderer::native_color_t native_color_t;
         
             ButtonView(Widget *parent_): Widget(parent_),
-                layout_flag(false),
+                //layout_flag(false),
                 _rast_font(nullptr),
                 _reg_font(0),
                 _unreg_font(0),
@@ -46,20 +46,27 @@ namespace gpc {
                     _rast_font = rast_font;
                     // TODO: make sure font will be registered with Renderer before next use!
                     _reg_font = 0;
-                    flagForGraphicResourceUpdate();
+                    updateLayout();
+                    queueResourceUpdate();
                 }
             }
 
             void setColor(const rgba_t &color) {
 
                 bg_color = color;
-                mustUpdateGraphicResources();
+
+                // TODO: should the former imply the latter ?
+                queueResourceUpdate();
+                invalidate();
             }
 
             void setHoverColor(const rgba_t &color) {
 
                 bg_color_hover = color;
-                mustUpdateGraphicResources();
+
+                // TODO: should the former imply the latter ?
+                queueResourceUpdate();
+                invalidate();
             }
 
             template <>
@@ -77,7 +84,7 @@ namespace gpc {
 
                 _caption.resize(to_next - &_caption[0]);
 
-                invalidateLayout();
+                updateLayout();
             }
 
             auto preferredSize() -> area_t override {
@@ -86,20 +93,17 @@ namespace gpc {
             }
 
             // TODO: is "layout" really the best-fitting term ?
-            void updateLayout(Renderer *rend) {
+            void updateLayout() {
 
-                init(rend);
-
-                if (layout_flag) {
-                    if (_rast_font) {
-                        // TODO: support font variants
-                        text_bbox = _rast_font->computeTextExtents(0, _caption.c_str(), _caption.size());
-                        // TODO: support other alignments than centered
-                        caption_origin.x = (width() - text_bbox.width()) / 2;
-                        caption_origin.y = (height() - text_bbox.height()) / 2 + text_bbox.y_max;
-                    }
-                    layout_flag = false;
+                if (_rast_font) {
+                    // TODO: support font variants
+                    text_bbox = _rast_font->computeTextExtents(0, _caption.c_str(), _caption.size());
+                    // TODO: support other alignments than centered
+                    caption_origin.x = (width() - text_bbox.width()) / 2;
+                    caption_origin.y = (height() - text_bbox.height()) / 2 + text_bbox.y_max;
                 }
+
+                invalidate();
             }
 
             void doUpdateGraphicResources(Renderer *rend, font_registry_t *font_reg) override {
@@ -117,24 +121,6 @@ namespace gpc {
                 }
                 
                 //throw std::runtime_error("not implemented yet");
-            }
-
-            void repaint(Renderer *rend, offset_t x_, offset_t y_) override {
-
-                updateLayout(rend);
-
-                // TODO: should use native colors instead!
-                rend->fill_rect(x_ + x(), y_ + y(), width(), height(), isMouseInside() ? native_bg_color_hover : native_bg_color);
-
-                if (_reg_font) {
-
-                    // TODO: text color
-
-                    // TODO: support "positive up" Y axis
-                    rend->render_text(_reg_font, 
-                        x_ + x() + caption_origin.x - text_bbox.x_min, y_ + y() + caption_origin.y, 
-                        _caption.c_str(), _caption.size());
-                }
             }
 
             void pointerButtonDown(const point_t &position) {
@@ -158,8 +144,20 @@ namespace gpc {
 
             void doInit(Renderer *rend) override {}
 
-            void invalidateLayout() {
-                layout_flag = true;
+            void doRepaint(Renderer *rend, offset_t x_, offset_t y_) override {
+
+                // TODO: should use native colors instead!
+                rend->fill_rect(x_ + x(), y_ + y(), width(), height(), isMouseInside() ? native_bg_color_hover : native_bg_color);
+
+                if (_reg_font) {
+
+                    // TODO: text color
+
+                    // TODO: support "positive up" Y axis
+                    rend->render_text(_reg_font,
+                        x_ + x() + caption_origin.x - text_bbox.x_min, y_ + y() + caption_origin.y,
+                        _caption.c_str(), _caption.size());
+                }
             }
 
         private:
@@ -173,7 +171,6 @@ namespace gpc {
             std::basic_string<char32_t> _caption;
             text_bbox_t text_bbox;
             point_t caption_origin;
-            bool layout_flag;
             point_t down_where;
         };
             

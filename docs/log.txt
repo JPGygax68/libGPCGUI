@@ -1,3 +1,32 @@
+2015-01-25
+==========
+
+Though it's very easy to store a collection of event handlers using std::function<> and std::vector<>, there seems to be no easy way to remove a handler from the collection due to the fact that std::function<> does not support an equality operator.
+
+So, should I:
+
+a) altogether drop the idea of supporting multiple event handlers per event ?
+b) support detaching all event handlers at the same time ?
+
+I've opted for (b) for now.
+
+Next question: should event handlers get a pointer to the widget ? I think YES, as that would allow assigning a shared event handler to a collection of widgets.
+
+---
+
+Another question: how about providing events as widget "properties" (i.e. methods returning object references), so that one could write:
+
+  my_button.mouseExit().addHandler( ... );
+  
+This would also remove the need for code duplication (but does it incur a footprint cost because of a need to point back to the widget?).
+
+---
+
+Just noted an inconvenience - when specifying lambda event handlers, one needs to specify the full type of the Widget parameter, which can be inconvenient as it needs template parameters.
+
+In a real future application, the widget types will likely come from an already available templated struct. Still, it might be beneficial to support overloads of addXXXXHandler() that just throw away that parameter (and possibly the others as well) to support unencumbered user code. (Of course, a full parameterless callback only makes sense if the event is "signal-like" - i.e., the fact that it's been fired at all can be considered useful information in and of itself.)
+
+
 2015-01-20 (evening)
 ==========
 

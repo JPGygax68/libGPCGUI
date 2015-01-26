@@ -54,19 +54,25 @@ int main(int argc, char *argv[])
 
         renderer.init();
 
+        typedef gpc::gui::Widget<SDLPlatform, GLRenderer> Widget;
         gpc::gui::RootWidget<SDLPlatform, GLRenderer> root_widget;
 
         gpc::gui::pixel_grid::Button<SDLPlatform, GLRenderer> button(&root_widget);
         button.setCaption(L"Click me!");
         button.setBounds({100, 100}, {200, 80});
-        button.addMouseEnterHandler([&](int x, int y) {
+        button.addMouseEnterHandler([&](Widget *widget, int x, int y) {
             std::cout << "Mouse entering at: " << x << ", " << y << std::endl;
             return true;
         });
+        auto handler = button.addMouseExitHandler([&](Widget *widget, int x, int y) {
+            std::cout << "Mouse exiting at: " << x << ", " << y << std::endl;
+            return true;
+        });
+        //button.dropMouseExitHandlers();
 
         int w, h;
         SDL_GetWindowSize(window, &w, &h);
-        root_widget.setCanvas(&renderer, w, h);
+        root_widget.defineCanvas(&renderer, w, h);
 
         button.setFont(root_widget.defaultFont());
         root_widget.addChild(&button);
@@ -77,6 +83,7 @@ int main(int argc, char *argv[])
 
             root_widget.updateGraphicResources();
 
+            // TODO: support updating only when view state has changed
             root_widget.render();
             SDL_GL_SwapWindow(window);
 

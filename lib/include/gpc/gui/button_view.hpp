@@ -18,18 +18,19 @@ namespace gpc {
         >
         class ButtonView: public Widget<Platform, Renderer> {
         public:
-            typedef typename const gpc::fonts::RasterizedFont *font_t;
+            typedef typename RGBAFloat rgba_t;
             typedef typename gpc::fonts::BoundingBox text_bbox_t;
             typedef typename Widget::point_t point_t;
             typedef typename ButtonViewModel::state_t state_t;
-            typedef typename Renderer::reg_font_t reg_font_t;
-            typedef typename Renderer::native_color_t color_t;
+            typedef typename Renderer::native_color_t native_color_t;
         
             ButtonView(Widget *parent_): Widget(parent_),
                 layout_flag(false),
                 _rast_font(nullptr),
                 _reg_font(0),
-                _unreg_font(0)
+                _unreg_font(0),
+                bg_color({ 0.7f, 0.7f, 0.7f }),
+                bg_color_hover({ 0.8f, 0.8f, 0.8f })
             {}
 
             template <typename CharT = wchar_t>
@@ -38,7 +39,7 @@ namespace gpc {
                 static_assert(sizeof(CharT) >= 2, "1-byte character set not supported");
             }
             
-            void setFont(font_t rast_font) {
+            void setFont(rast_font_t rast_font) {
 
                 if (rast_font != _rast_font) {
                     if (_reg_font) _unreg_font = _reg_font;
@@ -47,6 +48,18 @@ namespace gpc {
                     _reg_font = 0;
                     flagForGraphicResourceUpdate();
                 }
+            }
+
+            void setColor(const rgba_t &color) {
+
+                bg_color = color;
+                mustUpdateGraphicResources();
+            }
+
+            void setHoverColor(const rgba_t &color) {
+
+                bg_color_hover = color;
+                mustUpdateGraphicResources();
             }
 
             template <>
@@ -89,7 +102,10 @@ namespace gpc {
                 }
             }
 
-            void doUpdateGraphicResources(font_registry_t *font_reg) override {
+            void doUpdateGraphicResources(Renderer *rend, font_registry_t *font_reg) override {
+
+                native_bg_color = rend->rgba_to_native(bg_color);
+                native_bg_color_hover = rend->rgba_to_native(bg_color_hover);
 
                 if (_unreg_font) {
                     font_reg->releaseFont(_reg_font);
@@ -107,7 +123,8 @@ namespace gpc {
 
                 updateLayout(rend);
 
-                rend->fill_rect(x_ + x(), y_ + y(), width(), height(), bg_color);
+                // TODO: should use native colors instead!
+                rend->fill_rect(x_ + x(), y_ + y(), width(), height(), isMouseInside() ? native_bg_color_hover : native_bg_color);
 
                 if (_reg_font) {
 
@@ -139,10 +156,7 @@ namespace gpc {
 
         protected:
 
-            void doInit(Renderer *rend) override {
-
-                bg_color = rend->rgb_to_native({ 1, 1, 1 });
-            }
+            void doInit(Renderer *rend) override {}
 
             void invalidateLayout() {
                 layout_flag = true;
@@ -151,8 +165,9 @@ namespace gpc {
         private:
             ButtonViewModel * vm() { return static_cast<ButtonViewModel*>(this); }
 
-            font_t _rast_font;
-            color_t bg_color;
+            rast_font_t _rast_font;
+            rgba_t bg_color, bg_color_hover;
+            native_color_t native_bg_color, native_bg_color_hover;
             reg_font_t _reg_font;
             reg_font_t _unreg_font;
             std::basic_string<char32_t> _caption;

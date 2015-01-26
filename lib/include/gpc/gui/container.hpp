@@ -47,16 +47,16 @@ namespace gpc {
             /** Override this if your Container-derived widget needs graphics resources of
                 its own, and do not forget to call updateChildrenGraphicResources().
              */
-            void doUpdateGraphicResources(font_registry_t *font_reg) override {
+            void doUpdateGraphicResources(Renderer *rend, font_registry_t *font_reg) override {
 
-                updateChildrenGraphicResources(font_reg);
+                updateChildrenGraphicResources(rend, font_reg);
             }
 
-            void updateChildrenGraphicResources(font_registry_t *font_reg) {
+            void updateChildrenGraphicResources(Renderer *rend, font_registry_t *font_reg) {
 
                 for (auto child: _children) {
                     if (child->mustUpdateGraphicResources()) {
-                        child->updateGraphicResources(font_reg);
+                        child->updateGraphicResources(rend, font_reg);
                     }
                 }
             }

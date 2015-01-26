@@ -22,16 +22,13 @@ namespace gpc {
         class RootWidget: public Container<Platform, Renderer> {
 
         public:
-            typedef typename Renderer::offset_t offset_t;
-            typedef typename Renderer::length_t length_t;
-            typedef typename Renderer::reg_font_t reg_font_t;
 
             RootWidget(): Container(nullptr), _renderer(nullptr), _term_req(false) {
 
                 loadFonts();
             }
 
-            void setCanvas(Renderer *rend, length_t w, length_t h) {
+            void defineCanvas(Renderer *rend, length_t w, length_t h) {
 
                 _renderer = rend;
                 setBounds({0, 0}, {w, h});
@@ -56,21 +53,19 @@ namespace gpc {
                 }
             }
 
-            //void mouseMotion(int x, int y) {}
-
             void requestTermination() { _term_req = true; }
 
             bool terminationRequested() { return _term_req; }
 
             // TODO: we are providing the raw rasterized font; the root widget however could
             // also provide ready-for-use font handles
-            auto defaultFont() const -> font_t { return &_default_font; }
+            auto defaultFont() const -> rast_font_t { return &_default_font; }
 
             void updateGraphicResources() {
 
                 _font_registry.setRenderer(_renderer);
 
-                Widget::updateGraphicResources(&_font_registry);
+                Widget::updateGraphicResources(_renderer, &_font_registry);
             }
 
             void releaseGraphicResources() {
@@ -91,7 +86,7 @@ namespace gpc {
             }
 
         private:
-            typename Renderer::native_color_t bg_color;
+            rend_color_t bg_color;
 
             static auto liberation_sans_regular_16_data() -> std::pair<const uint8_t *, size_t> {
 

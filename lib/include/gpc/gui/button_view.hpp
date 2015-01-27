@@ -144,10 +144,9 @@ namespace gpc {
 
             void doInit(Renderer *rend) override {}
 
-            void doRepaint(Renderer *rend, offset_t x_, offset_t y_) override {
+            void doRepaint(Renderer *rend, offset_t x_par, offset_t y_par) override {
 
-                // TODO: should use native colors instead!
-                rend->fill_rect(x_ + x(), y_ + y(), width(), height(), isMouseInside() ? native_bg_color_hover : native_bg_color);
+                rend->fill_rect(x_par + x(), y_par + y(), width(), height(), isMouseInside() ? native_bg_color_hover : native_bg_color);
 
                 if (_reg_font) {
 
@@ -155,7 +154,7 @@ namespace gpc {
 
                     // TODO: support "positive up" Y axis
                     rend->render_text(_reg_font,
-                        x_ + x() + caption_origin.x - text_bbox.x_min, y_ + y() + caption_origin.y,
+                        x_par + x() + caption_origin.x - text_bbox.x_min, y_par + y() + caption_origin.y,
                         _caption.c_str(), _caption.size());
                 }
             }

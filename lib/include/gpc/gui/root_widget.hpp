@@ -89,10 +89,10 @@ namespace gpc {
 
             // Moving this into protected space, should only be called from render()
             // TODO: parameter for update region
-            void doRepaint(Renderer *_renderer, offset_t x_abs, offset_t y_abs) override {
+            void doRepaint(Renderer *_renderer, offset_t x_par, offset_t y_par) override {
 
                 // TODO: replace the following dummy
-                _renderer->fill_rect(x_abs + x(), y_abs + y(), width(), height(), bg_color);
+                _renderer->fill_rect(x_par + x(), y_par + y(), width(), height(), bg_color);
 
                 repaintChildren(_renderer, 0, 0);
             }

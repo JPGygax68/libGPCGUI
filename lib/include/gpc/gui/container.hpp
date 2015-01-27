@@ -15,25 +15,25 @@ namespace gpc {
                 child_must_update_resources(false)
             {}
 
-            void mouseMotion(int x_abs, int y_abs) override {
+            void mouseMotion(int x_par, int y_par) override {
 
                 for (auto child: _children) {
-                    child->mouseMotion(x_abs - x(), y_abs - y());
+                    child->mouseMotion(x_par - x(), y_par - y());
                 }
             }
 
-            void mouseButtonDown(int button, int x_abs, int y_abs) override {
+            void mouseButtonDown(int button, int x_par, int y_par) override {
 
-                int xr = x_abs - x(), yr = y_abs - y();
+                int xr = x_par - x(), yr = y_par - y();
 
                 for (auto child : _children) {
                     child->mouseButtonDown(button, xr, yr);
                 }
             }
 
-            void mouseButtonUp(int button, int x_abs, int y_abs) override {
+            void mouseButtonUp(int button, int x_par, int y_par) override {
 
-                int xr = x_abs - x(), yr = y_abs - y();
+                int xr = x_par - x(), yr = y_par - y();
 
                 for (auto child : _children) {
                     child->mouseButtonUp(button, xr, yr);
@@ -79,15 +79,15 @@ namespace gpc {
 
         protected:
 
-            void doRepaint(Renderer *rend, offset_t x_abs, offset_t y_abs) override {
+            void doRepaint(Renderer *rend, offset_t x_par, offset_t y_par) override {
 
-                repaintChildren(rend, x_abs, y_abs);
+                repaintChildren(rend, x_par, y_par);
             }
 
-            void repaintChildren(Renderer *rend, offset_t x_abs, offset_t y_abs) {
+            void repaintChildren(Renderer *rend, offset_t x_par, offset_t y_par) {
 
                 for (auto child : _children) {
-                    child->repaint(rend, x_abs, y_abs);
+                    child->repaint(rend, x_par + x(), y_par + y());
                 }
             }
 

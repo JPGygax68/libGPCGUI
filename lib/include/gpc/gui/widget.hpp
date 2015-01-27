@@ -145,37 +145,37 @@ namespace gpc {
                 }
             }
 
-            virtual void mouseMotion(int x_abs, int y_abs) {
+            virtual void mouseMotion(int x_par, int y_par) {
 
                 if (!mouse_inside) {
-                    if (isPointInside({x_abs, y_abs})) {
+                    if (isPointInside({x_par, y_par})) {
                         mouse_inside = true;
-                        mouseEnter(x_abs, y_abs);
+                        mouseEnter(x_par, y_par);
                     }
                 }
                 else {
-                    if (!isPointInside({ x_abs, y_abs })) {
+                    if (!isPointInside({ x_par, y_par })) {
                         mouse_inside = false;
-                        mouseExit(x_abs, y_abs);
+                        mouseExit(x_par, y_par);
                     }
                 }
             }
 
-            virtual void mouseButtonDown(int button, int x_abs, int y_abs) {
+            virtual void mouseButtonDown(int button, int x_par, int y_par) {
 
-                if (isPointInside({x_abs, y_abs})) {
-                    mouse_down_point = {x_abs, y_abs};
+                if (isPointInside({x_par, y_par})) {
+                    mouse_down_point = {x_par, y_par};
                     mouse_down_button = button;
                 }
             }
 
-            virtual void mouseButtonUp(int button, int x_abs, int y_abs) {
+            virtual void mouseButtonUp(int button, int x_par, int y_par) {
 
-                if (x_abs >= (mouse_down_point.x - 1) && x_abs < (mouse_down_point.x + 1) &&
-                    y_abs >= (mouse_down_point.y - 1) && y_abs < (mouse_down_point.y + 1) &&
+                if (x_par >= (mouse_down_point.x - 1) && x_par < (mouse_down_point.x + 1) &&
+                    y_par >= (mouse_down_point.y - 1) && y_par < (mouse_down_point.y + 1) &&
                     mouse_down_button == button)
                 {
-                    mouseClick(button, x_abs, y_abs);
+                    mouseClick(button, x_par, y_par);
                 }
             }
 
@@ -204,12 +204,12 @@ namespace gpc {
                 }
             }
 
-            bool repaint(Renderer *rend, offset_t x_abs, offset_t y_abs) {
+            bool repaint(Renderer *rend, offset_t x_par, offset_t y_par) {
                 
                 assert(init_done);
 
                 if (must_repaint) {
-                    doRepaint(rend, x_abs, y_abs);
+                    doRepaint(rend, x_par, y_par);
                     must_repaint = false;
                     return true;
                 }
@@ -233,37 +233,37 @@ namespace gpc {
 
             virtual void doInvalidate() {}
 
-            virtual void doRepaint(Renderer *rend, offset_t x_abs, offset_t y_abs) = 0;
+            virtual void doRepaint(Renderer *rend, offset_t x_par, offset_t y_par) = 0;
 
             bool isPointInside(const point_t pt) const {
                 return pt.x >= _position.x && pt.x < (_position.x + _size.w)
                     && pt.y >= _position.y && pt.y < (_position.y + _size.h);
             }
             
-            virtual void mouseEnter(int x_abs, int y_abs) {
+            virtual void mouseEnter(int x_par, int y_par) {
 
                 for (auto &handler: mouse_enter_handlers) {
-                    if (handler(this, x_abs, y_abs)) return; // this prevents automatic invalidation
+                    if (handler(this, x_par, y_par)) return; // this prevents automatic invalidation
                 }
 
                 // TODO: make this dependent upon a flag ("invalidate on hover") ?
                 invalidate();
             }
 
-            virtual void mouseExit(int x_abs, int y_abs) {
+            virtual void mouseExit(int x_par, int y_par) {
 
                 for (auto &handler : mouse_exit_handlers) {
-                    if (handler(this, x_abs, y_abs)) return; // this prevents automatic invalidation
+                    if (handler(this, x_par, y_par)) return; // this prevents automatic invalidation
                 }
 
                 // TODO: make this dependent upon a flag ("invalidate on hover") ?
                 invalidate();
             }
 
-            virtual void mouseClick(int button, int x_abs, int y_abs) {
+            virtual void mouseClick(int button, int x_par, int y_par) {
 
                 for (auto &handler : mouse_click_handlers) {
-                    if (handler(this, button, x_abs, y_abs)) break;
+                    if (handler(this, button, x_par, y_par)) break;
                 }
             }
 

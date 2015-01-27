@@ -14,6 +14,7 @@ namespace gpc {
         template <class Platform, class Renderer>
         class Widget {
         public:
+            typedef Renderer renderer_t;
             typedef const gpc::fonts::RasterizedFont *rast_font_t;
             typedef typename FontRegistry<Renderer> font_registry_t;
             typedef typename Container<Platform, Renderer> container_t;
@@ -130,7 +131,7 @@ namespace gpc {
             bool initialized() const { return init_done; }
             bool isMouseInside() const { return mouse_inside; }
             bool mustUpdateGraphicResources() const { return must_update_graphic_resources; }
-            bool mustRepaint() const { return must_repaint; }
+            bool mustRepaint() const { return Platform::NEEDS_FULL_REDRAWS || must_repaint; }
 
             /** The init() method must be called before actual rendering starts. It calls
                 the doInit() virtual method exactly once to give the widget a chance to
@@ -208,12 +209,13 @@ namespace gpc {
                 
                 assert(init_done);
 
-                if (must_repaint) {
+                if (mustRepaint()) { 
                     doRepaint(rend, x_par, y_par);
                     must_repaint = false;
                     return true;
                 }
-                else return false;
+                else 
+                    return false;
             }
 
             // TODO: should this trigger a reflow or just set the _position & size in one go ?

@@ -43,14 +43,7 @@ namespace gpc {
 
             bool render() {
 
-                // TODO: support use of a constexpr to skip that check in case we do continuous rendering
-                if (mustRepaint()) {
-                    _renderer->enter_context();
-                    repaint(_renderer, 0, 0);
-                    _renderer->leave_context();
-                    return true;
-                }
-                else return false;
+                return repaint(_renderer, 0, 0);
             }
 
             void keyDown(int code)
@@ -91,10 +84,14 @@ namespace gpc {
             // TODO: parameter for update region
             void doRepaint(Renderer *_renderer, offset_t x_par, offset_t y_par) override {
 
+                _renderer->enter_context();
+
                 // TODO: replace the following dummy
                 _renderer->fill_rect(x_par + x(), y_par + y(), width(), height(), bg_color);
 
                 repaintChildren(_renderer, 0, 0);
+
+                _renderer->leave_context();
             }
 
         private:

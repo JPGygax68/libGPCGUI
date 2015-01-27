@@ -21,11 +21,15 @@ namespace {
         }
     };
 
-    struct SDLPlatform {
+    template <bool DoubleBuffered>
+    struct SDL_GL_Platform {
         
         enum KeyCodes {
             ESCAPE = SDLK_ESCAPE
         };
+
+        // TODO: this should really be constexpr
+        static const bool NEEDS_FULL_REDRAWS = DoubleBuffered;
 
         static void init() {
 
@@ -56,7 +60,11 @@ int main(int argc, char *argv[])
     typedef gpc::gui::gl::Renderer<true> GLRenderer;
 
     try {
+        static const bool DOUBLE_BUFFERING = true;
+
         SDL_Init(SDL_INIT_VIDEO);
+
+        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, DOUBLE_BUFFERING ? 1 : 0);
 
         // Create a Window
         SDL_Rect db;
@@ -72,16 +80,19 @@ int main(int argc, char *argv[])
         if (!gl_ctx) throw SDLError();
         //glewInit(); // should be done by GLRenderer
 
-        SDLPlatform::init();
+        typedef SDL_GL_Platform<DOUBLE_BUFFERING> Platform;
+
+        Platform::init();
 
         GLRenderer renderer;
 
         renderer.init();
 
-        typedef gpc::gui::Widget<SDLPlatform, GLRenderer> widget_t;
-        gpc::gui::RootWidget<SDLPlatform, GLRenderer> root_widget;
+        typedef gpc::gui::Widget<Platform, GLRenderer> widget_t;
+        typedef gpc::gui::RootWidget<Platform, GLRenderer> root_widget_t;
+        root_widget_t root_widget;
 
-        gpc::gui::pixel_grid::Button<SDLPlatform, GLRenderer> button(&root_widget);
+        gpc::gui::pixel_grid::Button<Platform, GLRenderer> button(&root_widget);
         button.setCaption(L"Click me!");
         button.setBounds({100, 100}, {200, 80});
         button.addMouseEnterHandler([&](widget_t *widget, int x, int y) {
@@ -106,13 +117,17 @@ int main(int argc, char *argv[])
         SDL_GetWindowSize(window, &w, &h);
         root_widget.defineCanvas(&renderer, w, h);
 
+        auto bg_color = renderer.rgb_to_native({0, 0.4f, 1});
+
         SDL_Event event;
         bool done = false;
         while (!root_widget.terminationRequested()) {
 
             root_widget.updateGraphicResources();
 
+            renderer.clear(bg_color);
             if (root_widget.render()) {
+                EXEC_GL(glFlush);
                 SDL_GL_SwapWindow(window);
             }
 
@@ -133,12 +148,14 @@ int main(int argc, char *argv[])
             else if (event.type == SDL_MOUSEBUTTONUP) {
                 root_widget.mouseButtonUp(event.button.button, event.button.x, event.button.y);
             }
-            else if (event.type == SDLPlatform::repaint_event_id()) {
+            else if (event.type == Platform::repaint_event_id()) {
                 std::cout << "repaint event received" << std::endl;
             }
         }
 
         root_widget.releaseGraphicResources();
+
+        SDL_DestroyWindow(window);
     }
     catch(const std::exception &e) {
         std::cerr << e.what() << std::endl;

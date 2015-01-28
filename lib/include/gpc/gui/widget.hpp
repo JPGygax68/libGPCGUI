@@ -51,8 +51,17 @@ namespace gpc {
             struct rect_t {
                 point_t position;
                 area_t size;
+                offset_t x() const { return position.x; }
+                offset_t y() const { return position.y; }
+                offset_t w() const { return size.w; }
+                offset_t h() const { return size.h; }
                 auto operator + (const point_t &offs) const -> rect_t {
                     return { position + offs, size };
+                }
+                auto grow(offset_t dx = 1, offset_t dy = 1) -> rect_t & {
+                    position.x -= dx, position.y -= dx;
+                    size.w += 2 * dx, size.h += 2 * dy;
+                    return *this;
                 }
             };
 
@@ -272,14 +281,23 @@ namespace gpc {
                 }
             }
 
+            void renderAlphaBevel(Renderer *rend, const rect_t &rect) {
+                
+                offset_t x = rect.x(), y = rect.y();
+                length_t w = rect.w(), h = rect.h();
+
+                renderAlphaBevel(rend, x, y, w, h);
+            }
+
             void renderAlphaBevel(Renderer *rend, offset_t x, offset_t y, length_t w, length_t h) {
 
-                rend_color_t light  = rend->rgba_to_native({1, 1, 1, 0.75f});
-                rend_color_t shadow = rend->rgba_to_native({0, 0, 0, 0.75f });
+                // TODO: make alpha value configurable
+                static const rend_color_t light  = Renderer::rgba_to_native({1, 1, 1, 0.75f});
+                static const rend_color_t shadow = Renderer::rgba_to_native({0, 0, 0, 0.75f });
 
                 // TODO: adapt for "positive up" Y axis
-                rend->fill_rect(x + 1    , y        , w - 2, 1    , light ); // top
-                rend->fill_rect(x        , y        , 1    , h - 1, light ); // left
+                rend->fill_rect(x + 1    , y        , w - 1, 1    , light ); // top
+                rend->fill_rect(x        , y        , 1    , h    , light ); // left
                 rend->fill_rect(x + w - 1, y + 1    , 1    , h - 1, shadow); // right
                 rend->fill_rect(x + 1    , y + h - 1, w - 2, 1    , shadow); // bottom
             }

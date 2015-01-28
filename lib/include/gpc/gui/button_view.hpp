@@ -149,7 +149,10 @@ namespace gpc {
                 rend->fill_rect(x_par + x(), y_par + y(), width(), height(), native_color);
 
                 // Bevel
-                renderAlphaBevel(rend, x_par + x(), y_par + y(), width(), height());
+                rect_t rect { x_par + x(), y_par + y(), width(), height() };
+                renderAlphaBevel(rend, rect);
+                rect.grow(-1, -1);
+                renderAlphaBevel(rend, rect);
 
                 if (_reg_font) {
 

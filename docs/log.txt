@@ -1,3 +1,14 @@
+2015-01-28
+==========
+
+Quick notes:
+
+- I've implemented a method to draw bevels in the Widget class. I'm not sure this is the right place; maybe a separate toolbox would be better.
+
+- I'm still looking for a better term to replace "area" to express the combination of a width and a height. Not sure right now why I dissed "extents".
+
+- I've defined Renderer::rgba_to_native() to be static methods. This could save some cycles because needed native colors can now easily be prepared as static constant values.
+
 2015-01-26
 ==========
 

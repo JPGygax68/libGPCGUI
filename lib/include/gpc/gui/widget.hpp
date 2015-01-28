@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <gpc/gui/renderer.hpp>
+
 #include "font_registry.hpp"
 
 namespace gpc {
@@ -14,6 +16,7 @@ namespace gpc {
         template <class Platform, class Renderer>
         class Widget {
         public:
+            typedef typename RGBAFloat rgba_t;
             typedef Renderer renderer_t;
             typedef const gpc::fonts::RasterizedFont *rast_font_t;
             typedef typename FontRegistry<Renderer> font_registry_t;
@@ -267,6 +270,18 @@ namespace gpc {
                 for (auto &handler : mouse_click_handlers) {
                     if (handler(this, button, x_par, y_par)) break;
                 }
+            }
+
+            void renderAlphaBevel(Renderer *rend, offset_t x, offset_t y, length_t w, length_t h) {
+
+                rend_color_t light  = rend->rgba_to_native({1, 1, 1, 0.75f});
+                rend_color_t shadow = rend->rgba_to_native({0, 0, 0, 0.75f });
+
+                // TODO: adapt for "positive up" Y axis
+                rend->fill_rect(x + 1    , y        , w - 2, 1    , light ); // top
+                rend->fill_rect(x        , y        , 1    , h - 1, light ); // left
+                rend->fill_rect(x + w - 1, y + 1    , 1    , h - 1, shadow); // right
+                rend->fill_rect(x + 1    , y + h - 1, w - 2, 1    , shadow); // bottom
             }
 
         private:

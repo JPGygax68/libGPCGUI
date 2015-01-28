@@ -18,7 +18,6 @@ namespace gpc {
         >
         class ButtonView: public Widget<Platform, Renderer> {
         public:
-            typedef typename RGBAFloat rgba_t;
             typedef typename gpc::fonts::BoundingBox text_bbox_t;
             typedef typename Widget::point_t point_t;
             typedef typename ButtonViewModel::state_t state_t;
@@ -108,13 +107,6 @@ namespace gpc {
 
             void doUpdateGraphicResources(Renderer *rend, font_registry_t *font_reg) override {
 
-                native_colors.face = rend->rgba_to_native(face_color);
-                native_colors.light_border = rend->rgba_to_native(interpolate(rgba_t::WHITE(), face_color, 0.25));
-                native_colors.shadow_border = rend->rgba_to_native(interpolate(rgba_t::BLACK(), face_color, 0.25));
-                native_hover_colors.face = rend->rgba_to_native(face_hover_color);
-                native_hover_colors.light_border = rend->rgba_to_native(interpolate(rgba_t::WHITE(), face_hover_color, 0.25));
-                native_hover_colors.shadow_border = rend->rgba_to_native(interpolate(rgba_t::BLACK(), face_hover_color, 0.25));
-
                 if (_unreg_font) {
                     font_reg->releaseFont(_reg_font);
                     _reg_font = 0;
@@ -150,14 +142,14 @@ namespace gpc {
 
             void doRepaint(Renderer *rend, offset_t x_par, offset_t y_par) override {
 
-                ColorSet &colors = isMouseInside() ? native_colors : native_hover_colors;
+                rgba_t &color = isMouseInside() ? face_color : face_hover_color;
+                rend_color_t native_color = rend->rgba_to_native(color);
+                
+                // Face
+                rend->fill_rect(x_par + x(), y_par + y(), width(), height(), native_color);
 
-                // TODO: adapt for "positive up" Y axis
-                rend->fill_rect(x_par + x(), y_par + y(), width(), height(), colors.face);
-                rend->fill_rect(x_par + x() + 1, y_par + y(), width() - 1, 1, colors.light_border); // top
-                rend->fill_rect(x_par + x(), y_par + y() + 1, 1, height() - 2, colors.light_border); // left
-                rend->fill_rect(x_par + x() + width() - 1, y_par + y() + 1, 1, height() - 1, colors.shadow_border); // right
-                rend->fill_rect(x_par + x() + 1, y_par + y() + height() - 1, width() - 2, 1, colors.shadow_border); // bottom
+                // Bevel
+                renderAlphaBevel(rend, x_par + x(), y_par + y(), width(), height());
 
                 if (_reg_font) {
 
@@ -172,17 +164,11 @@ namespace gpc {
 
         private:
 
-            struct ColorSet {
-                native_color_t face;
-                native_color_t light_border, shadow_border;
-            };
-
             ButtonViewModel * vm() { return static_cast<ButtonViewModel*>(this); }
 
             rast_font_t _rast_font;
 
             rgba_t face_color, face_hover_color;
-            ColorSet native_colors, native_hover_colors;
             reg_font_t _reg_font;
             reg_font_t _unreg_font;
             std::basic_string<char32_t> _caption;

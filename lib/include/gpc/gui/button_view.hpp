@@ -29,8 +29,8 @@ namespace gpc {
                 _rast_font(nullptr),
                 _reg_font(0),
                 _unreg_font(0),
-                bg_color({ 0.7f, 0.7f, 0.7f }),
-                bg_color_hover({ 0.8f, 0.8f, 0.8f })
+                face_color({ 0.7f, 0.7f, 0.7f }),
+                face_hover_color({ 0.8f, 0.8f, 0.8f })
             {}
 
             template <typename CharT = wchar_t>
@@ -51,18 +51,18 @@ namespace gpc {
                 }
             }
 
-            void setColor(const rgba_t &color) {
+            void setFaceColor(const rgba_t &color) {
 
-                bg_color = color;
+                face_color = color;
 
                 // TODO: should the former imply the latter ?
                 queueResourceUpdate();
                 invalidate();
             }
 
-            void setHoverColor(const rgba_t &color) {
+            void setFaceColorHover(const rgba_t &color) {
 
-                bg_color_hover = color;
+                face_hover_color = color;
 
                 // TODO: should the former imply the latter ?
                 queueResourceUpdate();
@@ -108,8 +108,12 @@ namespace gpc {
 
             void doUpdateGraphicResources(Renderer *rend, font_registry_t *font_reg) override {
 
-                native_bg_color = rend->rgba_to_native(bg_color);
-                native_bg_color_hover = rend->rgba_to_native(bg_color_hover);
+                native_colors.face = rend->rgba_to_native(face_color);
+                native_colors.light_border = rend->rgba_to_native(interpolate(rgba_t::WHITE(), face_color, 0.25));
+                native_colors.shadow_border = rend->rgba_to_native(interpolate(rgba_t::BLACK(), face_color, 0.25));
+                native_hover_colors.face = rend->rgba_to_native(face_hover_color);
+                native_hover_colors.light_border = rend->rgba_to_native(interpolate(rgba_t::WHITE(), face_hover_color, 0.25));
+                native_hover_colors.shadow_border = rend->rgba_to_native(interpolate(rgba_t::BLACK(), face_hover_color, 0.25));
 
                 if (_unreg_font) {
                     font_reg->releaseFont(_reg_font);
@@ -146,7 +150,14 @@ namespace gpc {
 
             void doRepaint(Renderer *rend, offset_t x_par, offset_t y_par) override {
 
-                rend->fill_rect(x_par + x(), y_par + y(), width(), height(), isMouseInside() ? native_bg_color_hover : native_bg_color);
+                ColorSet &colors = isMouseInside() ? native_colors : native_hover_colors;
+
+                // TODO: adapt for "positive up" Y axis
+                rend->fill_rect(x_par + x(), y_par + y(), width(), height(), colors.face);
+                rend->fill_rect(x_par + x() + 1, y_par + y(), width() - 1, 1, colors.light_border); // top
+                rend->fill_rect(x_par + x(), y_par + y() + 1, 1, height() - 2, colors.light_border); // left
+                rend->fill_rect(x_par + x() + width() - 1, y_par + y() + 1, 1, height() - 1, colors.shadow_border); // right
+                rend->fill_rect(x_par + x() + 1, y_par + y() + height() - 1, width() - 2, 1, colors.shadow_border); // bottom
 
                 if (_reg_font) {
 
@@ -160,11 +171,18 @@ namespace gpc {
             }
 
         private:
+
+            struct ColorSet {
+                native_color_t face;
+                native_color_t light_border, shadow_border;
+            };
+
             ButtonViewModel * vm() { return static_cast<ButtonViewModel*>(this); }
 
             rast_font_t _rast_font;
-            rgba_t bg_color, bg_color_hover;
-            native_color_t native_bg_color, native_bg_color_hover;
+
+            rgba_t face_color, face_hover_color;
+            ColorSet native_colors, native_hover_colors;
             reg_font_t _reg_font;
             reg_font_t _unreg_font;
             std::basic_string<char32_t> _caption;

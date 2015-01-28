@@ -105,8 +105,8 @@ int main(int argc, char *argv[])
         });
         button.addMouseClickHandler([&](widget_t *widget, int btn, int x, int y) {
             std::cout << "Mouse click of button " << btn << " at " << x << ", " << y << std::endl;
-            button.setColor({1, 0.25f, 0});
-            button.setHoverColor({ 1, 0.35f, 0.1f });
+            button.setFaceColor({1, 0.25f, 0});
+            button.setFaceColorHover({ 1, 0.35f, 0.1f });
             return true;
         });
 

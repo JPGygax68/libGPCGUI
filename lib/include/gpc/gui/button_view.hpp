@@ -1,6 +1,7 @@
 #pragma once
 
 #include <codecvt>
+#include <functional>
 
 #include <gpc/fonts/RasterizedFont.hpp>
 #include <gpc/fonts/BoundingBox.hpp>
@@ -20,14 +21,17 @@ namespace gpc {
             typedef typename gpc::fonts::BoundingBox text_bbox_t;
             typedef typename Widget::point_t point_t;
             typedef typename Renderer::native_color_t native_color_t;
+            typedef enum { UP = 0, DOWN = 1} state_t;
+            typedef std::function<void(ButtonView *, state_t)> state_change_handler_t;
         
             ButtonView(Widget *parent_): Widget(parent_),
                 //layout_flag(false),
                 _rast_font(nullptr),
                 _reg_font(0),
                 _unreg_font(0),
-                face_color({ 0.7f, 0.7f, 0.7f }),
-                face_hover_color({ 0.8f, 0.8f, 0.8f })
+                _face_color({ 0.7f, 0.7f, 0.7f }),
+                _face_hover_color({ 0.8f, 0.8f, 0.8f }),
+                _state(UP)
             {}
 
             template <typename CharT = wchar_t>
@@ -50,7 +54,7 @@ namespace gpc {
 
             void setFaceColor(const rgba_t &color) {
 
-                face_color = color;
+                _face_color = color;
 
                 // TODO: should the former imply the latter ?
                 queueResourceUpdate();
@@ -59,7 +63,7 @@ namespace gpc {
 
             void setFaceColorHover(const rgba_t &color) {
 
-                face_hover_color = color;
+                _face_hover_color = color;
 
                 // TODO: should the former imply the latter ?
                 queueResourceUpdate();
@@ -82,6 +86,16 @@ namespace gpc {
                 _caption.resize(to_next - &_caption[0]);
 
                 updateLayout();
+            }
+
+            void addStateChangeHandler(state_change_handler_t handler) {
+                
+                state_change_handlers.push_back(handler);
+            }
+
+            void removeStateChangeHandlers() {
+            
+                state_change_handlers.clear();
             }
 
             auto preferredSize() -> area_t override {
@@ -134,13 +148,31 @@ namespace gpc {
                 }
             }
 
+            void mouseButtonDown(int button, int x_par, int y_par) override {
+
+                if (button == 1) {
+                    setState(DOWN);
+                }
+
+                Widget::mouseButtonDown(button, x_par, y_par);
+            }
+
+            void mouseButtonUp(int button, int x_par, int y_par) override {
+
+                if (button == 1) {
+                    setState(UP);
+                }
+
+                Widget::mouseButtonUp(button, x_par, y_par);
+            }
+
         protected:
 
             void doInit(Renderer *rend) override {}
 
             void doRepaint(Renderer *rend, offset_t x_par, offset_t y_par) override {
 
-                rgba_t &color = isMouseInside() ? face_color : face_hover_color;
+                rgba_t &color = isMouseInside() ? _face_color : _face_hover_color;
                 rend_color_t native_color = rend->rgba_to_native(color);
                 
                 // Face
@@ -165,12 +197,23 @@ namespace gpc {
 
         private:
 
+            void setState(state_t state) {
+
+                if (state != _state) {
+                    for (auto &handler: state_change_handlers) { 
+                        handler(this, state); };
+                    _state = state;
+                }
+            }
+
             rast_font_t _rast_font;
 
-            rgba_t face_color, face_hover_color;
+            rgba_t _face_color, _face_hover_color;
             reg_font_t _reg_font;
             reg_font_t _unreg_font;
             std::basic_string<char32_t> _caption;
+            std::vector<state_change_handler_t> state_change_handlers;
+            state_t _state;
             text_bbox_t text_bbox;
             point_t caption_origin;
             point_t down_where;

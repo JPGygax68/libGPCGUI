@@ -90,6 +90,8 @@ int main(int argc, char *argv[])
 
         typedef gpc::gui::Widget<Platform, GLRenderer> widget_t;
         typedef gpc::gui::RootWidget<Platform, GLRenderer> root_widget_t;
+        typedef gpc::gui::ButtonView<Platform, GLRenderer> button_t;
+
         root_widget_t root_widget;
 
         gpc::gui::pixel_grid::Button<Platform, GLRenderer> button(&root_widget);
@@ -108,6 +110,9 @@ int main(int argc, char *argv[])
             button.setFaceColor({1, 0.25f, 0});
             button.setFaceColorHover({ 1, 0.35f, 0.1f });
             return true;
+        });
+        button.addStateChangeHandler([&](button_t *widget, button_t::state_t state) {
+            std::cout << "Button state: " << state << std::endl;
         });
 
         button.setFont(root_widget.defaultFont());

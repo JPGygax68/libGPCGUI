@@ -3,7 +3,7 @@ add_library(libGPCGUI STATIC "src/dummy.cpp"
   "include/gpc/gui/font_registry.hpp"
   "include/gpc/gui/container.hpp"
   "include/gpc/gui/root_widget.hpp"
-  "include/gpc/gui/button_viewmodel.hpp"
+  #"include/gpc/gui/button_viewmodel.hpp"
   "include/gpc/gui/button_view.hpp"
   "include/gpc/gui/pixel_grid/button.hpp"
 )

@@ -6,7 +6,6 @@
 #include <gpc/fonts/BoundingBox.hpp>
 
 #include <gpc/gui/widget.hpp>
-#include <gpc/gui/button_viewmodel.hpp>
 
 namespace gpc {
 
@@ -20,7 +19,6 @@ namespace gpc {
         public:
             typedef typename gpc::fonts::BoundingBox text_bbox_t;
             typedef typename Widget::point_t point_t;
-            typedef typename ButtonViewModel::state_t state_t;
             typedef typename Renderer::native_color_t native_color_t;
         
             ButtonView(Widget *parent_): Widget(parent_),
@@ -166,8 +164,6 @@ namespace gpc {
             }
 
         private:
-
-            ButtonViewModel * vm() { return static_cast<ButtonViewModel*>(this); }
 
             rast_font_t _rast_font;
 

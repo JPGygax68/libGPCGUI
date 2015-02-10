@@ -14,7 +14,8 @@ namespace gpc {
     
         template <
             class Platform, 
-            class Renderer
+            class Renderer,
+            class Impl
         >
         class ButtonView: public Widget<Platform, Renderer> {
         public:
@@ -22,15 +23,13 @@ namespace gpc {
             typedef typename Widget::point_t point_t;
             typedef typename Renderer::native_color_t native_color_t;
             typedef enum { UP = 0, DOWN = 1} state_t;
-            typedef std::function<void(ButtonView *, state_t)> state_change_handler_t;
+            typedef std::function<void(Impl *, state_t)> state_change_handler_t;
         
             ButtonView(Widget *parent_): Widget(parent_),
                 //layout_flag(false),
                 _rast_font(nullptr),
                 _reg_font(0),
                 _unreg_font(0),
-                _face_color({ 0.7f, 0.7f, 0.7f }),
-                _face_hover_color({ 0.8f, 0.8f, 0.8f }),
                 _state(UP)
             {}
 
@@ -50,24 +49,6 @@ namespace gpc {
                     updateLayout();
                     queueResourceUpdate();
                 }
-            }
-
-            void setFaceColor(const rgba_t &color) {
-
-                _face_color = color;
-
-                // TODO: should the former imply the latter ?
-                queueResourceUpdate();
-                invalidate();
-            }
-
-            void setFaceColorHover(const rgba_t &color) {
-
-                _face_hover_color = color;
-
-                // TODO: should the former imply the latter ?
-                queueResourceUpdate();
-                invalidate();
             }
 
             template <>
@@ -170,30 +151,10 @@ namespace gpc {
 
             void doInit(Renderer *rend) override {}
 
-            void doRepaint(Renderer *rend, offset_t x_par, offset_t y_par) override {
-
-                rgba_t &color = isMouseInside() ? _face_color : _face_hover_color;
-                rend_color_t native_color = rend->rgba_to_native(color);
-                
-                // Face
-                rend->fill_rect(x_par + x(), y_par + y(), width(), height(), native_color);
-
-                // Bevel
-                rect_t rect { x_par + x(), y_par + y(), width(), height() };
-                renderAlphaBevel(rend, rect);
-                rect.grow(-1, -1);
-                renderAlphaBevel(rend, rect);
-
-                if (_reg_font) {
-
-                    // TODO: text color
-
-                    // TODO: support "positive up" Y axis
-                    rend->render_text(_reg_font,
-                        x_par + x() + caption_origin.x - text_bbox.x_min, y_par + y() + caption_origin.y,
-                        _caption.c_str(), _caption.size());
-                }
-            }
+            auto captionFont() const -> reg_font_t { return _reg_font; }
+            auto captionText() const -> unicode_string_t { return _caption; }
+            auto captionBoundingBox() const -> text_bbox_t { return text_bbox; }
+            auto captionOrigin() const -> point_t { return caption_origin; }
 
         private:
 
@@ -201,17 +162,17 @@ namespace gpc {
 
                 if (state != _state) {
                     for (auto &handler: state_change_handlers) { 
-                        handler(this, state); };
+                        handler(static_cast<Impl*>(this), state); };
                     _state = state;
+                    invalidate();
                 }
             }
 
             rast_font_t _rast_font;
 
-            rgba_t _face_color, _face_hover_color;
             reg_font_t _reg_font;
             reg_font_t _unreg_font;
-            std::basic_string<char32_t> _caption;
+            unicode_string_t _caption;
             std::vector<state_change_handler_t> state_change_handlers;
             state_t _state;
             text_bbox_t text_bbox;

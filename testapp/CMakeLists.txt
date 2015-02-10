@@ -30,3 +30,15 @@ add_library(SDL2_MAIN STATIC IMPORTED)
 set_target_properties(SDL2_MAIN PROPERTIES IMPORTED_LOCATION ${SDL2_MAIN_LIB})
 
 target_link_libraries(TestApp PRIVATE SDL2 SDL2_MAIN)
+
+# OpenGL
+
+find_package(OpenGL REQUIRED)
+target_link_libraries(TestApp PRIVATE ${OPENGL_LIBRARIES})
+
+# glbinding
+
+find_package(glbinding REQUIRED)
+target_compile_definitions(TestApp PRIVATE GLBINDING_STATIC)
+target_include_directories(TestApp PRIVATE ${GLBINDING_INCLUDE})
+target_link_libraries(TestApp PRIVATE $<$<CONFIG:Debug>:${GLBINDING_LIBRARY_DEBUG}> $<$<CONFIG:Release>:${GLBINDING_LIBRARY_RELEASE}>)

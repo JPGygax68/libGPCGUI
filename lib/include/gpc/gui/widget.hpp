@@ -16,6 +16,7 @@ namespace gpc {
         template <class Platform, class Renderer>
         class Widget {
         public:
+            typedef std::basic_string<char32_t> unicode_string_t;
             typedef typename RGBAFloat rgba_t;
             typedef Renderer renderer_t;
             typedef const gpc::fonts::RasterizedFont *rast_font_t;

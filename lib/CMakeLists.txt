@@ -5,7 +5,8 @@ add_library(libGPCGUI STATIC "src/dummy.cpp"
   "include/gpc/gui/root_widget.hpp"
   #"include/gpc/gui/button_viewmodel.hpp"
   "include/gpc/gui/button_view.hpp"
-  "include/gpc/gui/pixel_grid/button.hpp"
+  # TODO: the following should probably go to a separate library at some point
+  "include/gpc/gui/pixel_grid/simple_theming/button.hpp"
 )
 
 # TODO: use $<INSTALL_INTERFACE:...> and $<BUILD_INTERFACE:...> if the project becomes installable
@@ -32,7 +33,7 @@ add_custom_command(
   COMMAND GPCBin2C --input=${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-16.rft --output=${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-16.rft.h
 )
 
-target_sources(libGPCGUI PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-16.rft.h)
+target_sources(libGPCGUI PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-16.rft.h)
 
 target_include_directories(libGPCGUI PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 

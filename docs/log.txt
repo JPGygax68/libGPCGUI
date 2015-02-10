@@ -1,3 +1,45 @@
+2015-02-03
+==========
+
+- One thing I had not thought about yet: I just noticed that Windows (among else) uses smooth transitions to indicate view state changes (e.g. hovering/leaving a button changes its color, but smoothly)
+
+- Maybe it's time, at this point, to think about theming.
+  - Generalize the notion of "view state", so that change to any view state would automatically trigger a repaint ?
+
+- I think animations should be kept outside of view state proper - though it must be able to trigger repaints.
+
+- In some scenarios, it might make sense to do repaints immediately after the event triggering them - perhaps this could be a template specialization as well ?
+
+---
+
+### Theming - brainstorming
+
+- Definition: make the association between view states and visual aspect customizable.
+
+- Define arithmetics for colors ?
+
+- Mix in theming via multiple inheritance ?
+
+- For right now, use color interpolation. E.g. button:
+  - define base colors (border, face)
+  - derive hover and "active" variants (button down)
+  - Theme:
+    - area border color, inactive
+    - area border color, "default" (for default button in a dialog)
+    - area background color, inactive
+    - area background color, hovered
+    - area background color, focused
+    - area background color, active (button down)
+
+- All these colors should come from a theme definition that can be used by all widgets.
+
+- Injecting "theming engine" into widget implementations
+  - Same class for all widgets, or specific to widget type ?
+  - Interface methods:
+    - drawBorder()
+    - drawBackground()
+    - drawOverlay()
+
 2015-01-28
 ==========
 

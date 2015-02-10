@@ -1,11 +1,15 @@
 #include <stdexcept>
 #include <string>
 
-#include <SDL2/SDL.h>
-//#include <gpc/gui/gui.hpp>
+#include <glbinding/gl/gl.h>
+using namespace gl; // necessary for GL-based header-only libraries
+
+#include <gpc/gui/gui.hpp>
 #include <gpc/gui/root_widget.hpp>
 #include <gpc/gui/gl/renderer.hpp>
-#include <gpc/gui/pixel_grid/button.hpp>
+#include <gpc/gui/pixel_grid/simple_theming/button.hpp>
+
+#include <SDL2/SDL.h>
 
 namespace {
 
@@ -79,6 +83,7 @@ int main(int argc, char *argv[])
         gl_ctx = SDL_GL_CreateContext(window);
         if (!gl_ctx) throw SDLError();
         //glewInit(); // should be done by GLRenderer
+        glbinding::Binding::initialize();
 
         typedef SDL_GL_Platform<DOUBLE_BUFFERING> Platform;
 
@@ -90,11 +95,11 @@ int main(int argc, char *argv[])
 
         typedef gpc::gui::Widget<Platform, GLRenderer> widget_t;
         typedef gpc::gui::RootWidget<Platform, GLRenderer> root_widget_t;
-        typedef gpc::gui::ButtonView<Platform, GLRenderer> button_t;
+        typedef gpc::gui::pixel_grid::simple_theming::Button<Platform, GLRenderer> button_t;
 
         root_widget_t root_widget;
 
-        gpc::gui::pixel_grid::Button<Platform, GLRenderer> button(&root_widget);
+        button_t button(&root_widget);
         button.setCaption(L"Click me!");
         button.setBounds({100, 100}, {200, 80});
         button.addMouseEnterHandler([&](widget_t *widget, int x, int y) {
@@ -111,7 +116,7 @@ int main(int argc, char *argv[])
             button.setFaceColorHover({ 1, 0.35f, 0.1f });
             return true;
         });
-        button.addStateChangeHandler([&](button_t *widget, button_t::state_t state) {
+        button.addStateChangeHandler([&](button_t *button, button_t::state_t state) {
             std::cout << "Button state: " << state << std::endl;
         });
 
@@ -132,7 +137,7 @@ int main(int argc, char *argv[])
 
             renderer.clear(bg_color);
             if (root_widget.render()) {
-                EXEC_GL(glFlush);
+                EXEC_GL(glbinding::Binding::Flush);
                 SDL_GL_SwapWindow(window);
             }
 

@@ -102,6 +102,7 @@ int main(int argc, char *argv[])
         button_t button(&root_widget);
         button.setCaption(L"Click me!");
         button.setBounds({100, 100}, {200, 80});
+        button.setCaptionColor({0.3f, 0, 0});
         button.addMouseEnterHandler([&](widget_t *widget, int x, int y) {
             std::cout << "Mouse entering at: " << x << ", " << y << std::endl;
             return false;
@@ -127,7 +128,9 @@ int main(int argc, char *argv[])
         SDL_GetWindowSize(window, &w, &h);
         root_widget.defineCanvas(&renderer, w, h);
 
-        auto bg_color = renderer.rgb_to_native({0, 0.4f, 1});
+        root_widget.setBackgroundColor({ 0.95f, 0.95f, 0.95f });
+
+        auto rend_bg_color = renderer.rgb_to_native({ 0.0f, 0.2f, 0.8f});
 
         SDL_Event event;
         bool done = false;
@@ -135,9 +138,9 @@ int main(int argc, char *argv[])
 
             root_widget.updateGraphicResources();
 
-            renderer.clear(bg_color);
+            renderer.clear(rend_bg_color);
             if (root_widget.render()) {
-                EXEC_GL(glbinding::Binding::Flush);
+                EXEC_GL(glFlush);
                 SDL_GL_SwapWindow(window);
             }
 

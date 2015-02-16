@@ -9,6 +9,17 @@ add_library(libGPCGUI STATIC "src/dummy.cpp"
   "include/gpc/gui/pixel_grid/simple_theming/button.hpp"
 )
 
+# Force static runtime libraries
+
+FOREACH(flag
+  CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_RELWITHDEBINFO
+  CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_DEBUG_INIT
+  CMAKE_CXX_FLAGS_RELEASE  CMAKE_CXX_FLAGS_RELWITHDEBINFO
+  CMAKE_CXX_FLAGS_DEBUG  CMAKE_CXX_FLAGS_DEBUG_INIT)
+  STRING(REPLACE "/MD"  "/MT" "${flag}" "${${flag}}")
+  SET("${flag}" "${${flag}} /EHsc")
+ENDFOREACH()
+ 
 # TODO: use $<INSTALL_INTERFACE:...> and $<BUILD_INTERFACE:...> if the project becomes installable
 target_include_directories(libGPCGUI PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
@@ -37,11 +48,9 @@ target_sources(libGPCGUI PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regu
 
 target_include_directories(libGPCGUI PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-# GPC Fonts
+# GPC GUI Renderer
+target_link_libraries(libGPCGUI PRIVATE libGPCGUIRenderer)
 
+# GPC Fonts
 find_package(libGPCFonts REQUIRED)
 target_link_libraries(libGPCGUI PUBLIC libGPCFonts)
-
-# Cereal
-
-# Cereal does not have CMake support afaik

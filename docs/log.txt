@@ -1,3 +1,40 @@
+2015-02-16
+==========
+
+I need a way to define the aspect of widgets. There need not be a full theming engine behind this right from the start, but it must definitely be possible to introduce one later on.
+
+I've defined an enum "ViewState" that lists the (visual) states a widget can be in. As far as I can think of right now, these are:
+
+- default
+- hover
+- active (usually means "being clicked")
+- deactivated
+
+There are other states that specific widgets can have, but this state is one that all widgets must have [note: I'm not quite happy with the term "view state"].
+
+I now need a way to associate an arbitrary number of properties, of arbitrary type, with each of these states. This will be the basis for my "simple theming", which only uses basic colors to render widgets. (Other theming implementations might not directly associate properties [or property variants] with view states.)
+
+What I need is a template that is able to store a different value for each view state, but is capable of falling back on an algorithm to determine values that are not defined - callbacks or trait-like classes should be used here, or possibly the CRTP pattern.
+
+To implement actual theming later on, the template should be made cascadable: a boolean determines whether a property object holds its own set of values, or obtains them from another property object via a pointer or reference.
+
+Actually, thinking about it, the first implementation of the Property template may not need to store multiple variants; the algorithmic path may be enough to start with.
+Then again: there is no algorithmic way to obtain a bold font from a regular one. (But yet again, emboldening a font as a visual highlight is a terrible, terrible idea.)
+
+
+2015-02-15
+==========
+
+I have just spent a few hours trying, and failing, to create a Theme implementation based on partial template specialization.
+
+The idea was to use the CRTP to define themes at compile-time, with the base class providing default variations on the basic colors provided in the derived class. Apparently though, there are limitations in the C++ standard, even C++11, that prevent this.
+
+Since this does not work, and the approach also has the drawback of precluding the option to override color definitions at runtime, I'm going to try a more down-to-earth approach next.
+
+One simple idea is to use a single entry point per theme element type (they will mostly be colors), that is given the element ID (e.g. BORDER) and the state (e.g. DEFAULT, HOVER, etc.). These methods could be made virtual. The base class would also use pure virtual method definitions by which to get basic colors (i.e. for the DEFAULT state of an element) from which it will derive the colors for the other states. A derived theme implementation can then choose to override that behaviour and provide, for example, a fine-tuned value for the HOVER state.
+
+Another approach would be to define a data format that can provide values for every theme element in every state, but is only required to do so for the DEFAULT state. If no value is provided for one of the other states, the Theme class would then fall back to deriving that value algorithmically.
+
 2015-02-03
 ==========
 

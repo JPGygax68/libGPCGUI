@@ -16,6 +16,12 @@ namespace gpc {
         template <class Platform, class Renderer>
         class Widget {
         public:
+
+            enum ViewState {
+                DEFAULT = 0,
+                HOVER
+            };
+
             typedef std::basic_string<char32_t> unicode_string_t;
             typedef typename RGBAFloat rgba_t;
             typedef Renderer renderer_t;
@@ -26,6 +32,7 @@ namespace gpc {
             typedef typename Renderer::length_t length_t;
             typedef typename Renderer::native_color_t rend_color_t;
             typedef typename Renderer::reg_font_t reg_font_t;
+            typedef enum ViewState view_state_t;
             
             typedef std::function<bool(Widget *, int, int)> mouse_enter_handler_t;
             typedef std::function<bool(Widget *, int, int)> mouse_exit_handler_t;

@@ -7,8 +7,9 @@ target_link_libraries(TestApp PRIVATE libGPCGUI)
 
 target_link_libraries(TestApp PRIVATE libGPCGUIGLRenderer)
 
+# We need a special build (statically linked runtime libs)
+if (0)
 # SDL 2
-
 find_library(SDL2_LIB SDL2)
 if (NOT SDL2_LIB) 
     message(ERROR "Couldn't find SDL2 library")
@@ -20,16 +21,15 @@ if (NOT SDL2_INCLUDE_DIR)
     message(ERROR "Couldn't find SDL2 include directory")
 endif()
 set_target_properties(SDL2 PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIR})
-
 find_library(SDL2_MAIN_LIB SDL2main)
 if (NOT SDL2_MAIN_LIB) 
     message(ERROR "Couldn't find SDL2 \"main\" object file")
 endif()
-
 add_library(SDL2_MAIN STATIC IMPORTED)
 set_target_properties(SDL2_MAIN PROPERTIES IMPORTED_LOCATION ${SDL2_MAIN_LIB})
+endif()
 
-target_link_libraries(TestApp PRIVATE SDL2 SDL2_MAIN)
+target_link_libraries(TestApp PRIVATE SDL2-static SDL2main)
 
 # OpenGL
 

@@ -13,3 +13,6 @@
 [submodule "external/libGPCGLWrappers"]
 	path = external/libGPCGLWrappers
 	url = https://github.com/JPGygax68/libGPCGLWrappers.git
+[submodule "external/SDL2"]
+	path = external/SDL2
+	url = git@github.com:JPGygax68/SDL2.git

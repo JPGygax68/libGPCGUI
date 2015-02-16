@@ -28,17 +28,23 @@ namespace gpc {
                 loadFonts();
             }
 
-            void defineCanvas(Renderer *rend, length_t w, length_t h) {
+            void defineCanvas(Renderer *rend, length_t w, length_t h, rgba_t bg_color = {0, 0, 0, 0}) {
 
                 _renderer = rend;
 
                 setBounds({0, 0}, {w, h});
                 rend->define_viewport(0, 0, width(), height());
-                bg_color = rend->rgb_to_native({ 0, 0.5f, 1 });
+                rend_bg_color = rend->rgba_to_native(bg_color);
 
                 _font_registry.setRenderer(rend);
 
                 init(rend);
+            }
+
+            void setBackgroundColor(const rgba_t &color) {
+
+                _bg_color = color;
+                queueResourceUpdate();
             }
 
             bool render() {
@@ -80,6 +86,13 @@ namespace gpc {
                 Platform::pushRepaintEvent();
             }
 
+            void doUpdateGraphicResources(Renderer *rend, font_registry_t *font_reg) override {
+
+               rend_bg_color = rend->rgba_to_native(_bg_color);
+
+               Container::doUpdateGraphicResources(rend, font_reg);
+            }
+
             // Moving this into protected space, should only be called from render()
             // TODO: parameter for update region
             void doRepaint(Renderer *_renderer, offset_t x_par, offset_t y_par) override {
@@ -87,7 +100,7 @@ namespace gpc {
                 _renderer->enter_context();
 
                 // TODO: replace the following dummy
-                _renderer->fill_rect(x_par + x(), y_par + y(), width(), height(), bg_color);
+                _renderer->fill_rect(x_par + x(), y_par + y(), width(), height(), rend_bg_color);
 
                 repaintChildren(_renderer, 0, 0);
 
@@ -95,7 +108,6 @@ namespace gpc {
             }
 
         private:
-            rend_color_t bg_color;
 
             static auto liberation_sans_regular_16_data() -> std::pair<const uint8_t *, size_t> {
 
@@ -134,6 +146,9 @@ namespace gpc {
 
             gpc::fonts::RasterizedFont _default_font;
             FontRegistry<Renderer> _font_registry;
+
+            rgba_t _bg_color;
+            rend_color_t rend_bg_color;
 
             Renderer *_renderer;
 

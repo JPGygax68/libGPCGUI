@@ -6,30 +6,30 @@ namespace gpc {
 
     namespace gui {
 
-        struct gpc::fonts::RasterizedFont;
+        struct gpc::fonts::rasterized_font;
 
         template <class Renderer>
-        class FontRegistry {
+        class font_registry {
 
-            typedef const gpc::fonts::RasterizedFont *rast_font_t;
-            typedef typename Renderer::reg_font_t reg_font_t;
+            using rasterized_font = gpc::fonts::rasterized_font;
+            using font_handle = Renderer::font_handle;
 
         public:
             
-            FontRegistry(): _rend(nullptr) {}
+            font_registry(): _rend(nullptr) {}
 
-            ~FontRegistry() {
+            ~font_registry() {
                 assert(_register.empty());
             }
 
-            void setRenderer(Renderer *rend) { 
+            void set_renderer(Renderer *rend) { 
 
                 assert(!_rend || _rend == rend);
 
                 _rend = rend; 
             }
 
-            void releaseAllFonts() {
+            void release_all_fonts() {
 
                 for (auto entry: _register) {
                     _rend->release_font(entry.second);
@@ -38,22 +38,22 @@ namespace gpc {
                 _reverse.clear();
             }
 
-            auto registerFont(rast_font_t rast_font) -> reg_font_t {
-
+            auto register_font(const rasterized_font *font) -> registered_font 
+            {
                 auto it = _register.find(rast_font);
                 if (it != _register.end()) {
                     return it->second;
                 }
                 else {
-                    reg_font_t reg_font = _rend->register_font(*rast_font);
+                    auto handle = _rend->register_font(*font);
                     _register[rast_font] = reg_font;
                     _reverse[reg_font] = rast_font;
                     return reg_font;
                 }
             }
 
-            void releaseFont(reg_font_t reg_font) {
-
+            void release_font(registered_font reg_font) 
+            {
                 rast_font_t rast_font = _reverse.find(reg_font)->second;
 
                 _rend->release_font(reg_font);
@@ -63,8 +63,8 @@ namespace gpc {
             }
 
         private:
-            std::map<rast_font_t, reg_font_t> _register;
-            std::map<reg_font_t, rast_font_t> _reverse; // TODO: is this really useful ?
+            std::map<rast_font_t, registered_font> _register;
+            std::map<registered_font, rast_font_t> _reverse; // TODO: is this really useful ?
             Renderer *_rend;
         };
 

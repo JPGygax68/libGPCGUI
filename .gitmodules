@@ -16,3 +16,6 @@
 [submodule "external/SDL2"]
 	path = external/SDL2
 	url = git@github.com:JPGygax68/SDL2.git
+[submodule "external/GPCFontRasterizer"]
+	path = external/GPCFontRasterizer
+	url = git@github.com:JPGygax68/GPCFontRasterizer.git

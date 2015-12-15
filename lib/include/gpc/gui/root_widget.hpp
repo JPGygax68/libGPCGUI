@@ -8,7 +8,7 @@
 #include <cereal/archives/binary.hpp>
 #include <cereal/cereal.hpp>
 
-#include <gpc/fonts/RasterizedFont.hpp>
+#include <gpc/fonts/rasterized-font.hpp>
 #include <gpc/fonts/cereal.hpp>
 
 #include <gpc/gui/container.hpp>

@@ -1,4 +1,8 @@
-add_library(libGPCGUI STATIC "src/dummy.cpp" 
+project(libgpc-gui)
+
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+add_library(${PROJECT_NAME} STATIC "src/dummy.cpp" 
   "include/gpc/gui/widget.hpp"
   "include/gpc/gui/font_registry.hpp"
   "include/gpc/gui/container.hpp"
@@ -11,22 +15,27 @@ add_library(libGPCGUI STATIC "src/dummy.cpp"
 
 # Force static runtime libraries
 
-FOREACH(flag
-  CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_RELWITHDEBINFO
-  CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_DEBUG_INIT
-  CMAKE_CXX_FLAGS_RELEASE  CMAKE_CXX_FLAGS_RELWITHDEBINFO
-  CMAKE_CXX_FLAGS_DEBUG  CMAKE_CXX_FLAGS_DEBUG_INIT)
-  STRING(REPLACE "/MD"  "/MT" "${flag}" "${${flag}}")
-  SET("${flag}" "${${flag}} /EHsc")
-ENDFOREACH()
+if (MSVC)
+    option(USE_STATICALLY_LINKED_RUNTIMES OFF)
+    if (USE_STATICALLY_LINKED_RUNTIMES)
+        foreach(flag
+          CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_RELWITHDEBINFO
+          CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_DEBUG_INIT
+          CMAKE_CXX_FLAGS_RELEASE  CMAKE_CXX_FLAGS_RELWITHDEBINFO
+          CMAKE_CXX_FLAGS_DEBUG  CMAKE_CXX_FLAGS_DEBUG_INIT)
+          STRING(REPLACE "/MD"  "/MT" "${flag}" "${${flag}}")
+          SET("${flag}" "${${flag}} /EHsc")
+        endforeach()
+    endif()
+endif()
  
 # TODO: use $<INSTALL_INTERFACE:...> and $<BUILD_INTERFACE:...> if the project becomes installable
-target_include_directories(libGPCGUI PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # Embed a font
 
-if (NOT GPCFontRasterizer)
-  find_package(GPCFontRasterizer REQUIRED)
+if (NOT TARGET gpc-font-rasterizer)
+  find_package(gpc-font-rasterizer REQUIRED)
 endif()
 
 add_custom_command(
@@ -34,7 +43,7 @@ add_custom_command(
   COMMAND GPCFontRasterizer input="${CMAKE_CURRENT_SOURCE_DIR}/LiberationSans-Regular.ttf" size=16 output="${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-16.rft"
 )
 
-if (NOT GPCBin2C)
+if (NOT TARGET GPCBin2C)
   find_package(GPCBin2C REQUIRED)
 endif()
 
@@ -44,13 +53,13 @@ add_custom_command(
   COMMAND GPCBin2C --input=${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-16.rft --output=${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-16.rft.h
 )
 
-target_sources(libGPCGUI PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-16.rft.h)
+target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-16.rft.h)
 
-target_include_directories(libGPCGUI PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 # GPC GUI Renderer
-target_link_libraries(libGPCGUI PRIVATE libGPCGUIRenderer)
+target_link_libraries(${PROJECT_NAME} PRIVATE libGPCGUIRenderer)
 
 # GPC Fonts
 find_package(libGPCFonts REQUIRED)
-target_link_libraries(libGPCGUI PUBLIC libGPCFonts)
+target_link_libraries(${PROJECT_NAME} PUBLIC libGPCFonts)

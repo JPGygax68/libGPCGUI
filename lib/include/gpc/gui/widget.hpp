@@ -171,16 +171,16 @@ namespace gpc {
                 allocate resources from / register resources with the renderer.
                 TODO: still necessary now that there is updateGraphicResources() e.a. ?
              */
-            virtual void init(Renderer *rend) {
-                
+            virtual void init(Renderer *rend) 
+            {                
                 if (!init_done) {
                     doInit(rend);
                     init_done = true;
                 }
             }
 
-            virtual void mouseMotion(int x_par, int y_par) {
-
+            virtual void mouseMotion(int x_par, int y_par)
+            {
                 if (!mouse_inside) {
                     if (isPointInside({x_par, y_par})) {
                         mouse_inside = true;
@@ -195,16 +195,16 @@ namespace gpc {
                 }
             }
 
-            virtual void mouseButtonDown(int button, int x_par, int y_par) {
-
+            virtual void mouseButtonDown(int button, int x_par, int y_par)
+            {
                 if (isPointInside({x_par, y_par})) {
                     mouse_down_point = {x_par, y_par};
                     mouse_down_button = button;
                 }
             }
 
-            virtual void mouseButtonUp(int button, int x_par, int y_par) {
-
+            virtual void mouseButtonUp(int button, int x_par, int y_par)
+            {
                 if (x_par >= (mouse_down_point.x - 1) && x_par < (mouse_down_point.x + 1) &&
                     y_par >= (mouse_down_point.y - 1) && y_par < (mouse_down_point.y + 1) &&
                     mouse_down_button == button)
@@ -277,8 +277,8 @@ namespace gpc {
                     && pt.y >= _position.y && pt.y < (_position.y + _size.h);
             }
             
-            virtual void mouseEnter(int x_par, int y_par) {
-
+            virtual void mouseEnter(int x_par, int y_par)
+            {
                 for (auto &handler: mouse_enter_handlers) {
                     if (handler(this, x_par, y_par)) return; // this prevents automatic invalidation
                 }
@@ -287,8 +287,8 @@ namespace gpc {
                 invalidate();
             }
 
-            virtual void mouseExit(int x_par, int y_par) {
-
+            virtual void mouseExit(int x_par, int y_par)
+            {
                 for (auto &handler : mouse_exit_handlers) {
                     if (handler(this, x_par, y_par)) return; // this prevents automatic invalidation
                 }
@@ -297,23 +297,23 @@ namespace gpc {
                 invalidate();
             }
 
-            virtual void mouseClick(int button, int x_par, int y_par) {
-
+            virtual void mouseClick(int button, int x_par, int y_par)
+            {
                 for (auto &handler : mouse_click_handlers) {
                     if (handler(this, button, x_par, y_par)) break;
                 }
             }
 
-            void renderAlphaBevel(renderer *rend, const rect &rect) {
-                
+            void renderAlphaBevel(renderer *rend, const rect &rect)
+            {                
                 offset x = rect.x(), y = rect.y();
                 length_t w = rect.w(), h = rect.h();
 
                 renderAlphaBevel(rend, x, y, w, h);
             }
 
-            void renderAlphaBevel(renderer *rend, offset x, offset y, length w, length h) {
-
+            void renderAlphaBevel(renderer *rend, offset x, offset y, length w, length h)
+            {
                 // TODO: make alpha value configurable
                 static const auto light  = renderer::rgba_to_native({1, 1, 1, 0.75f});
                 static const auto shadow = renderer::rgba_to_native({0, 0, 0, 0.75f});

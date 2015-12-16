@@ -17,63 +17,76 @@ namespace gpc {
         class Widget {
         public:
 
-            enum ViewState {
-                DEFAULT = 0,
-                HOVER
-            };
+            // Imported types, and derived thereof
 
-            typedef std::basic_string<char32_t> unicode_string_t;
-            typedef typename RGBAFloat rgba_t;
-            typedef Renderer renderer_t;
-            typedef const gpc::fonts::RasterizedFont *rast_font_t;
-            typedef typename FontRegistry<Renderer> font_registry_t;
-            typedef typename Container<Platform, Renderer> container_t;
-            typedef typename Renderer::offset_t offset_t;
-            typedef typename Renderer::length_t length_t;
-            typedef typename Renderer::native_color_t rend_color_t;
-            typedef typename Renderer::reg_font_t reg_font_t;
-            typedef enum ViewState view_state_t;
+            using platform          = typename Platform;
+            using renderer          = typename Renderer;
+            using container         = typename Container<platform, renderer>;
+            using offset            = typename renderer::offset;
+            using length            = typename renderer::length;
+            using native_color      = typename renderer::native_color;
+            using font_handle       = typename renderer::font_handle;
             
-            typedef std::function<bool(Widget *, int, int)> mouse_enter_handler_t;
-            typedef std::function<bool(Widget *, int, int)> mouse_exit_handler_t;
-            typedef std::function<bool(Widget *, int, int, int)> mouse_button_down_handler_t;
-            typedef std::function<bool(Widget *, int, int, int)> mouse_button_up_handler_t;
-            typedef std::function<bool(Widget *, int, int, int)> mouse_click_handler_t;
-
-            // TODO: decide whether Point and Extents should be defined by the renderer class instead of here.
+            // TODO: decide whether point and extents should be defined by the renderer class instead of here.
             
-            struct point_t {
-                offset_t x, y;
-                bool operator == (const point_t &other) const {
+            struct point {
+                offset x, y;
+                bool operator == (const point &other) const 
+                {
                     return x == other.x && y == other.y;
                 }
-                auto operator + (const point_t &other) const -> point_t {
+                auto operator + (const point &other) const -> point
+                {
                     return { x + other.x, y + other.y };
                 }
             };
 
-            struct area_t {
-                length_t w, h;
+            struct area {
+                length w, h;
             };
 
-            struct rect_t {
-                point_t position;
-                area_t size;
-                offset_t x() const { return position.x; }
-                offset_t y() const { return position.y; }
-                offset_t w() const { return size.w; }
-                offset_t h() const { return size.h; }
-                auto operator + (const point_t &offs) const -> rect_t {
+            struct rect {
+                point   position;
+                area    size;
+                auto x() const { return position.x; }
+                auto y() const { return position.y; }
+                auto w() const { return size.w; }
+                auto h() const { return size.h; }
+                auto operator + (const point &offs) const -> rect 
+                {
                     return { position + offs, size };
                 }
-                auto grow(offset_t dx = 1, offset_t dy = 1) -> rect_t & {
+                auto grow(offset dx = 1, offset dy = 1) -> rect &
+                {
                     position.x -= dx, position.y -= dx;
                     size.w += 2 * dx, size.h += 2 * dy;
                     return *this;
                 }
             };
 
-            Widget(Widget *parent_): 
+            // Own types
+
+            using unicode_string = std::basic_string<char32_t>; // TODO: probably obsolete with C++11/14
+
+            enum view_state {
+                DEFAULT = 0,
+                HOVER
+            };
+
+            typedef std::function<bool(Widget *, int, int)> mouse_enter_handler_t;
+            typedef std::function<bool(Widget *, int, int)> mouse_exit_handler_t;
+            typedef std::function<bool(Widget *, int, int, int)> mouse_button_down_handler_t;
+            typedef std::function<bool(Widget *, int, int, int)> mouse_button_up_handler_t;
+            typedef std::function<bool(Widget *, int, int, int)> mouse_click_handler_t;
+
+            // Convenience type definitions
+
+            using rasterized_font   = gpc::fonts::rasterized_font;
+            using font_registry     = font_registry<renderer>;
+
+            // Lifecyle
+
+            Widget(Widget *parent_):
                 _parent(parent_), 
                 init_done(false),
                 must_update_graphic_resources(true),
@@ -142,16 +155,16 @@ namespace gpc {
 
             auto parent() -> Widget * const { return _parent; }
             auto size() -> size_t const { return _size; }
-            auto x() -> offset_t const { return _position.x; }
-            auto y() -> offset_t const { return _position.y; }
-            auto position() const -> point_t { return _position; }
-            auto width() const -> length_t { return _size.w; }
-            auto height() const -> length_t { return _size.h; }
-            auto size() const -> area_t { return _size; }
+            auto x() -> offset const { return _position.x; }
+            auto y() -> offset const { return _position.y; }
+            auto position() const -> point { return _position; }
+            auto width() const -> length { return _size.w; }
+            auto height() const -> length { return _size.h; }
+            auto size() const -> area { return _size; }
             bool initialized() const { return init_done; }
             bool isMouseInside() const { return mouse_inside; }
             bool mustUpdateGraphicResources() const { return must_update_graphic_resources; }
-            bool mustRepaint() const { return Platform::NEEDS_FULL_REDRAWS || must_repaint; }
+            bool mustRepaint() const { return platform::needs_full_redraws || must_repaint; }
 
             /** The init() method must be called before actual rendering starts. It calls
                 the doInit() virtual method exactly once to give the widget a chance to
@@ -200,24 +213,24 @@ namespace gpc {
                 }
             }
 
-            void queueResourceUpdate() {
-
+            void queueResourceUpdate()
+            {
                 if (!must_update_graphic_resources) {
                     must_update_graphic_resources = true;
                     if (_parent) _parent->queueResourceUpdate();
                 }
             }
 
-            void updateGraphicResources(Renderer *rend, font_registry_t *font_reg) {
-
+            void updateGraphicResources(Renderer *rend, font_registry *font_reg)
+            {
                 if (must_update_graphic_resources) {
                     doUpdateGraphicResources(rend, font_reg);
                     must_update_graphic_resources = false;
                 }
             }
 
-            void invalidate() {
-
+            void invalidate()
+            {
                 if (!must_repaint) {
                     must_repaint = true;
                     if (_parent) _parent->invalidate();
@@ -225,8 +238,8 @@ namespace gpc {
                 }
             }
 
-            bool repaint(Renderer *rend, offset_t x_par, offset_t y_par) {
-                
+            bool repaint(Renderer *rend, offset x_par, offset y_par)
+            {                
                 assert(init_done);
 
                 if (mustRepaint()) { 
@@ -240,24 +253,26 @@ namespace gpc {
 
             // TODO: should this trigger a reflow or just set the _position & size in one go ?
 
-            virtual auto preferredSize() -> area_t { return _size; }
+            virtual auto preferredSize() -> area { return _size; }
 
-            void setBounds(const point_t &position_, const area_t &extents_) {
+            void setBounds(const point &position_, const area &extents_)
+            {
                 _position = position_;
                 _size = extents_;
             }
 
         protected:
         
-            virtual void doInit(Renderer *rend) {}
+            virtual void doInit(renderer * /*rend*/) {}
             
-            virtual void doUpdateGraphicResources(Renderer *rend, font_registry_t *font_reg) {}
+            virtual void doUpdateGraphicResources(renderer * /*rend*/, font_registry * /*font_reg*/) {}
 
             virtual void doInvalidate() {}
 
-            virtual void doRepaint(Renderer *rend, offset_t x_par, offset_t y_par) = 0;
+            virtual void doRepaint(renderer *rend, offset x_par, offset y_par) = 0;
 
-            bool isPointInside(const point_t pt) const {
+            bool isPointInside(const point pt) const
+            {
                 return pt.x >= _position.x && pt.x < (_position.x + _size.w)
                     && pt.y >= _position.y && pt.y < (_position.y + _size.h);
             }
@@ -289,19 +304,19 @@ namespace gpc {
                 }
             }
 
-            void renderAlphaBevel(Renderer *rend, const rect_t &rect) {
+            void renderAlphaBevel(renderer *rend, const rect &rect) {
                 
-                offset_t x = rect.x(), y = rect.y();
+                offset x = rect.x(), y = rect.y();
                 length_t w = rect.w(), h = rect.h();
 
                 renderAlphaBevel(rend, x, y, w, h);
             }
 
-            void renderAlphaBevel(Renderer *rend, offset_t x, offset_t y, length_t w, length_t h) {
+            void renderAlphaBevel(renderer *rend, offset x, offset y, length w, length h) {
 
                 // TODO: make alpha value configurable
-                static const rend_color_t light  = Renderer::rgba_to_native({1, 1, 1, 0.75f});
-                static const rend_color_t shadow = Renderer::rgba_to_native({0, 0, 0, 0.75f });
+                static const auto light  = renderer::rgba_to_native({1, 1, 1, 0.75f});
+                static const auto shadow = renderer::rgba_to_native({0, 0, 0, 0.75f});
 
                 // TODO: adapt for "positive up" Y axis
                 rend->fill_rect(x + 1    , y        , w - 1, 1    , light ); // top
@@ -311,22 +326,22 @@ namespace gpc {
             }
 
         private:
-            point_t _position;
-            area_t _size;
-            Widget *_parent;
+            point                                       _position;
+            area                                        _size;
+            Widget                                     *_parent;
 
-            std::vector<mouse_enter_handler_t> mouse_enter_handlers;
-            std::vector<mouse_exit_handler_t> mouse_exit_handlers;
-            std::vector<mouse_button_down_handler_t> mouse_button_down_handlers;
-            std::vector<mouse_button_up_handler_t> mouse_button_up_handlers;
-            std::vector<mouse_click_handler_t> mouse_click_handlers;
+            std::vector<mouse_enter_handler_t>          mouse_enter_handlers;
+            std::vector<mouse_exit_handler_t>           mouse_exit_handlers;
+            std::vector<mouse_button_down_handler_t>    mouse_button_down_handlers;
+            std::vector<mouse_button_up_handler_t>      mouse_button_up_handlers;
+            std::vector<mouse_click_handler_t>          mouse_click_handlers;
 
-            bool init_done;
-            bool must_update_graphic_resources;
-            bool must_repaint;
-            bool mouse_inside;
-            point_t mouse_down_point;
-            int mouse_down_button;
+            bool                                        init_done;
+            bool                                        must_update_graphic_resources;
+            bool                                        must_repaint;
+            bool                                        mouse_inside;
+            point                                       mouse_down_point;
+            int                                         mouse_down_button;
         };
             
     } // ns gui

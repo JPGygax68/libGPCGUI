@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(gpc-gui-all)
+project(GPCGUI_All)
 
 enable_testing()
 

@@ -27,7 +27,7 @@ namespace gpc {
                         })
                     {}
 
-                    void setFaceColor(const rgba_t &color) {
+                    void setFaceColor(const rgba &color) {
 
                         _rgba_colors.face = color;
                         // TODO: should the former imply the latter ?
@@ -35,7 +35,7 @@ namespace gpc {
                         invalidate();
                     }
 
-                    void setFaceColorHover(const rgba_t &color) {
+                    void setFaceColorHover(const rgba &color) {
 
                         _rgba_colors.face_hover = color;
                         // TODO: should the former imply the latter ?
@@ -43,7 +43,7 @@ namespace gpc {
                         invalidate();
                     }
 
-                    void setBorderColor(const rgba_t &color) {
+                    void setBorderColor(const rgba &color) {
 
                         _rgba_colors.border = color;
                         // TODO: should the former imply the latter ?
@@ -51,7 +51,7 @@ namespace gpc {
                         invalidate();
                     }
 
-                    void setBorderColorHover(const rgba_t &color) {
+                    void setBorderColorHover(const rgba &color) {
 
                         _rgba_colors.border_hover = color;
                         // TODO: should the former imply the latter ?
@@ -59,7 +59,7 @@ namespace gpc {
                         invalidate();
                     }
 
-                    void setCaptionColor(const rgba_t &color) {
+                    void setCaptionColor(const rgba &color) {
 
                         _rgba_colors.caption = color;
                         queueResourceUpdate();
@@ -70,8 +70,8 @@ namespace gpc {
                     // TODO: is it appropriate to reuse the same virtual method for theming, or
                     // should a specialized method be introduced (which probably would not need
                     // access to the font registry) ?
-                    void doUpdateGraphicResources(Renderer *rend, font_registry_t *font_reg) override {
-
+                    void doUpdateGraphicResources(Renderer *rend, font_registry *font_reg) override
+                    {
                         _native_colors.face         = rend->rgba_to_native(_rgba_colors.face);
                         _native_colors.face_hover   = rend->rgba_to_native(_rgba_colors.face_hover);
                         _native_colors.border       = rend->rgba_to_native(_rgba_colors.border);
@@ -81,8 +81,8 @@ namespace gpc {
                         ButtonView::doUpdateGraphicResources(rend, font_reg);
                     }
 
-                    void doRepaint(Renderer *rend, offset_t x_par, offset_t y_par) override {
-
+                    void doRepaint(Renderer *rend, offset x_par, offset y_par) override
+                    {
                         auto native_face   = isMouseInside() ? _native_colors.face   : _native_colors.face_hover;
                         auto native_border = isMouseInside() ? _native_colors.border : _native_colors.border_hover;
 
@@ -122,8 +122,8 @@ namespace gpc {
                         Color face, face_hover;
                         Color caption;
                     };
-                    Colors<rgba_t> _rgba_colors;
-                    Colors<native_color_t> _native_colors;
+                    Colors<rgba>            _rgba_colors;
+                    Colors<native_color>    _native_colors;
                 };
 
             } // ns simple_theming

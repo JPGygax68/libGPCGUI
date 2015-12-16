@@ -11,6 +11,8 @@ namespace gpc {
         class Container: public Widget<InputChannel, Renderer> {
         public:
 
+            using offset = typename Widget::offset;
+
             Container(Widget *parent_): Widget(parent_),
                 child_must_update_resources(false)
             {}
@@ -63,13 +65,13 @@ namespace gpc {
             /** Override this if your Container-derived widget needs graphics resources of
                 its own, and do not forget to call updateChildrenGraphicResources().
              */
-            void doUpdateGraphicResources(Renderer *rend, font_registry_t *font_reg) override {
-
+            void doUpdateGraphicResources(renderer *rend, font_registry *font_reg) override
+            {
                 updateChildrenGraphicResources(rend, font_reg);
             }
 
-            void updateChildrenGraphicResources(Renderer *rend, font_registry_t *font_reg) {
-
+            void updateChildrenGraphicResources(renderer *rend, font_registry *font_reg)
+            {
                 for (auto child: _children) {
                     if (child->mustUpdateGraphicResources()) {
                         child->updateGraphicResources(rend, font_reg);
@@ -79,12 +81,12 @@ namespace gpc {
 
         protected:
 
-            void doRepaint(Renderer *rend, offset_t x_par, offset_t y_par) override {
+            void doRepaint(renderer *rend, offset x_par, offset y_par) override {
 
                 repaintChildren(rend, x_par, y_par);
             }
 
-            void repaintChildren(Renderer *rend, offset_t x_par, offset_t y_par) {
+            void repaintChildren(renderer *rend, offset x_par, offset y_par) {
 
                 for (auto child : _children) {
                     child->repaint(rend, x_par + x(), y_par + y());

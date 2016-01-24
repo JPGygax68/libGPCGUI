@@ -1,18 +1,21 @@
 #pragma once
 
 #include <cassert>
+#include <map>
 
 namespace gpc {
 
-    namespace gui {
+    namespace fonts {
+        struct rasterized_font; // forward declaration
+    }
 
-        struct gpc::fonts::rasterized_font;
+    namespace gui {
 
         template <class Renderer>
         class font_registry {
 
             using rasterized_font = gpc::fonts::rasterized_font;
-            using font_handle = Renderer::font_handle;
+            using font_handle = typename Renderer::font_handle;
 
         public:
             
@@ -38,7 +41,7 @@ namespace gpc {
                 _reverse.clear();
             }
 
-            auto register_font(const rasterized_font *font) -> registered_font 
+            auto register_font(const rasterized_font *font) -> font_handle 
             {
                 auto it = _register.find(rast_font);
                 if (it != _register.end()) {
@@ -52,19 +55,19 @@ namespace gpc {
                 }
             }
 
-            void release_font(registered_font reg_font) 
+            void release_font(font_handle handle) 
             {
-                rast_font_t rast_font = _reverse.find(reg_font)->second;
+                const rasterized_font *font = _reverse.find(handle)->second;
 
-                _rend->release_font(reg_font);
+                _rend->release_font(handle);
 
-                _reverse.erase(reg_font);
-                _register.erase(rast_font);
+                _reverse.erase(handle);
+                _register.erase(font);
             }
 
         private:
-            std::map<rast_font_t, registered_font> _register;
-            std::map<registered_font, rast_font_t> _reverse; // TODO: is this really useful ?
+            std::map<const rasterized_font *, font_handle> _register;
+            //std::map<font_handle, const rasterized_font *> _reverse; // TODO: is this really useful ?
             Renderer *_rend;
         };
 

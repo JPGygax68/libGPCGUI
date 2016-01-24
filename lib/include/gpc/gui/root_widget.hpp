@@ -8,7 +8,7 @@
 #include <cereal/archives/binary.hpp>
 #include <cereal/cereal.hpp>
 
-#include <gpc/fonts/rasterized-font.hpp>
+#include <gpc/fonts/rasterized_font.hpp>
 #include <gpc/fonts/cereal.hpp>
 
 #include <gpc/gui/container.hpp>
@@ -23,13 +23,18 @@ namespace gpc {
 
         public:
 
+            using platform        = typename Container::platform;
+            using renderer        = typename Container::renderer;
+            using rasterized_font = typename gpc::fonts::rasterized_font;
+            using native_color    = typename Container::native_color;
+
             RootWidget(): Container(nullptr), _renderer(nullptr), _term_req(false) {
 
                 loadFonts();
             }
 
-            void defineCanvas(Renderer *rend, length_t w, length_t h, rgba_t bg_color = {0, 0, 0, 0}) {
-
+            void defineCanvas(renderer *rend, length w, length h, rgba bg_color = {0, 0, 0, 0})
+            {
                 _renderer = rend;
 
                 setBounds({0, 0}, {w, h});
@@ -41,10 +46,10 @@ namespace gpc {
                 init(rend);
             }
 
-            void setBackgroundColor(const rgba_t &color) {
-
-                _bg_color = color;
-                queueResourceUpdate();
+            void setBackgroundColor(const rgba &color)
+            {
+                _bg_color = renderer::rgba_to_native(color);
+                //queueResourceUpdate(); // no longer needed as rgba_to_native is static
             }
 
             bool render() {
@@ -67,7 +72,7 @@ namespace gpc {
 
             // TODO: we are providing the raw rasterized font; the root widget however could
             // also provide ready-for-use font handles
-            auto defaultFont() const -> rast_font_t { return &_default_font; }
+            auto defaultFont() const -> const rasterized_font * { return &_default_font; }
 
             void updateGraphicResources() {
 
@@ -81,30 +86,30 @@ namespace gpc {
 
         protected:
 
-            void doInvalidate() override {
-
+            void doInvalidate() override
+            {
                 Platform::pushRepaintEvent();
             }
 
-            void doUpdateGraphicResources(Renderer *rend, font_registry_t *font_reg) override {
-
-               rend_bg_color = rend->rgba_to_native(_bg_color);
-
+            /*
+            void doUpdateGraphicResources(renderer *rend, font_registry *font_reg) override
+            {
                Container::doUpdateGraphicResources(rend, font_reg);
             }
+            */
 
             // Moving this into protected space, should only be called from render()
             // TODO: parameter for update region
-            void doRepaint(Renderer *_renderer, offset_t x_par, offset_t y_par) override {
-
-                _renderer->enter_context();
+            void doRepaint(renderer *rend, offset x_par, offset y_par) override 
+            {
+                rend->enter_context();
 
                 // TODO: replace the following dummy
-                _renderer->fill_rect(x_par + x(), y_par + y(), width(), height(), rend_bg_color);
+                rend->fill_rect(x_par + x(), y_par + y(), width(), height(), _bg_color);
 
-                repaintChildren(_renderer, 0, 0);
+                repaintChildren(rend, 0, 0);
 
-                _renderer->leave_context();
+                rend->leave_context();
             }
 
         private:
@@ -127,8 +132,8 @@ namespace gpc {
             // in certain cases (like OpenGL under Windows) it could be shared between
             // all displays (and therefore multiple root widgets).
 
-            auto loadFont(std::pair<const uint8_t *, size_t> data) -> gpc::fonts::RasterizedFont {
-
+            auto loadFont(std::pair<const uint8_t *, size_t> data) -> rasterized_font
+            {
                 struct membuf : std::streambuf {
                     membuf(char* begin, char* end) {
                         this->setg(begin, begin, end);
@@ -138,21 +143,20 @@ namespace gpc {
                 membuf sbuf((char*)(data.first), (char*)(data.first + data.second));
                 std::istream istr(&sbuf);
                 cereal::BinaryInputArchive ar(istr);
-                gpc::fonts::RasterizedFont rast_font;
+                gpc::fonts::rasterized_font rast_font;
                 ar >> rast_font;
 
                 return rast_font;
             }
 
-            gpc::fonts::RasterizedFont _default_font;
-            FontRegistry<Renderer> _font_registry;
+            rasterized_font         _default_font;
+            font_registry           _font_registry;
 
-            rgba_t _bg_color;
-            rend_color_t rend_bg_color;
+            native_color            _bg_color;
 
-            Renderer *_renderer;
+            renderer               *_renderer;
 
-            bool _term_req;
+            bool                    _term_req;
         };
 
     } // ns gui

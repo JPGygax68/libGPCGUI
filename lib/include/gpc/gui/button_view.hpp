@@ -3,8 +3,8 @@
 #include <codecvt>
 #include <functional>
 
-#include <gpc/fonts/RasterizedFont.hpp>
-#include <gpc/fonts/BoundingBox.hpp>
+#include <gpc/fonts/rasterized_font.hpp>
+#include <gpc/fonts/bounding_box.hpp>
 
 #include <gpc/gui/widget.hpp>
 
@@ -34,16 +34,16 @@ namespace gpc {
             {}
 
             template <typename CharT = wchar_t>
-            void setCaption(const CharT *text, size_t count = 0U) {
-
+            void setCaption(const CharT *text, size_t count = 0U)
+            {
                 static_assert(sizeof(CharT) >= 2, "1-byte character set not supported");
             }
             
-            void setFont(rast_font_t rast_font) {
-
-                if (rast_font != _rast_font) {
+            void setFont(const rasterized_font *font)
+            {
+                if (font != _font) {
                     if (_reg_font) _unreg_font = _reg_font;
-                    _rast_font = rast_font;
+                    _font = font;
                     // TODO: make sure font will be registered with Renderer before next use!
                     _reg_font = 0;
                     updateLayout();
@@ -52,8 +52,8 @@ namespace gpc {
             }
 
             template <>
-            void setCaption<wchar_t>(const wchar_t *text, size_t count) {
-
+            void setCaption<wchar_t>(const wchar_t *text, size_t count)
+            {
                 if (count == 0) for (count = 0; text[count] != 0; count++);
                 _caption.resize(count);
 
@@ -69,24 +69,25 @@ namespace gpc {
                 updateLayout();
             }
 
-            void addStateChangeHandler(state_change_handler_t handler) {
-                
+            void addStateChangeHandler(state_change_handler_t handler)
+            {                
                 state_change_handlers.push_back(handler);
             }
 
-            void removeStateChangeHandlers() {
-            
+            void removeStateChangeHandlers()
+            {            
                 state_change_handlers.clear();
             }
 
-            auto preferredSize() -> area_t override {
+            auto preferredSize() -> area_t override 
+            {
                 // TODO: add border and padding
                 return { text_bbox.width(), text_bbox.height() };
             }
 
             // TODO: is "layout" really the best-fitting term ?
-            void updateLayout() {
-
+            void updateLayout()
+            {
                 if (_rast_font) {
                     // TODO: support font variants
                     text_bbox = _rast_font->computeTextExtents(0, _caption.c_str(), _caption.size());
@@ -98,8 +99,8 @@ namespace gpc {
                 invalidate();
             }
 
-            void doUpdateGraphicResources(Renderer *rend, font_registry_t *font_reg) override {
-
+            void doUpdateGraphicResources(Renderer *rend, font_registry_t *font_reg) override
+            {
                 if (_unreg_font) {
                     font_reg->releaseFont(_reg_font);
                     _reg_font = 0;
@@ -112,8 +113,8 @@ namespace gpc {
                 //throw std::runtime_error("not implemented yet");
             }
 
-            void pointerButtonDown(const point_t &position) {
-
+            void pointerButtonDown(const point_t &position) 
+            {
                 // TODO: position checking should be (non-virtual) overridable (e.g. bitmap mask)
                 if (isPointInside(position)) {
                     vm()->setState(ButtonState::DOWN);
@@ -121,16 +122,16 @@ namespace gpc {
                 }
             }
 
-            void pointerButtonUp(const point_t &position) {
-
+            void pointerButtonUp(const point_t &position)
+            {
                 vm()->setState(state_t::UP);
                 if (position == down_where) {
                     vm()->notifyClick();
                 }
             }
 
-            void mouseButtonDown(int button, int x_par, int y_par) override {
-
+            void mouseButtonDown(int button, int x_par, int y_par) override 
+            {
                 if (button == 1) {
                     setState(DOWN);
                 }
@@ -138,8 +139,8 @@ namespace gpc {
                 Widget::mouseButtonDown(button, x_par, y_par);
             }
 
-            void mouseButtonUp(int button, int x_par, int y_par) override {
-
+            void mouseButtonUp(int button, int x_par, int y_par) override
+            {
                 if (button == 1) {
                     setState(UP);
                 }
@@ -151,15 +152,15 @@ namespace gpc {
 
             void doInit(Renderer *rend) override {}
 
-            auto captionFont() const -> reg_font_t { return _reg_font; }
-            auto captionText() const -> unicode_string_t { return _caption; }
+            auto captionFont() const -> font_handle { return _reg_font; }
+            auto captionText() const -> unicode_string { return _caption; }
             auto captionBoundingBox() const -> text_bbox_t { return text_bbox; }
             auto captionOrigin() const -> point_t { return caption_origin; }
 
         private:
 
-            void setState(state_t state) {
-
+            void setState(state_t state)
+            {
                 if (state != _state) {
                     for (auto &handler: state_change_handlers) { 
                         handler(static_cast<Impl*>(this), state); };
@@ -168,11 +169,11 @@ namespace gpc {
                 }
             }
 
-            rast_font_t _rast_font;
+            const rasterized_font *_font;
 
-            reg_font_t _reg_font;
-            reg_font_t _unreg_font;
-            unicode_string_t _caption;
+            font_handle _reg_font;
+            font_handle _unreg_font;
+            unicode_string _caption;
             std::vector<state_change_handler_t> state_change_handlers;
             state_t _state;
             text_bbox_t text_bbox;

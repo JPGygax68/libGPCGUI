@@ -1,4 +1,4 @@
-project(libgpc-gui)
+project(libGPCGUI)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 

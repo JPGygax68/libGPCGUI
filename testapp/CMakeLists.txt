@@ -4,7 +4,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE libgpc-gui)
+target_link_libraries(${PROJECT_NAME} PRIVATE libGPCGUI)
 
 # GPC GUI GL Renderer
 # Target provided by containing project

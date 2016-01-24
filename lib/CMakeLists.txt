@@ -15,6 +15,7 @@ add_library(${PROJECT_NAME} STATIC "src/dummy.cpp"
 
 # Force static runtime libraries
 
+if (0)
 if (MSVC)
     option(USE_STATICALLY_LINKED_RUNTIMES OFF)
     if (USE_STATICALLY_LINKED_RUNTIMES)
@@ -28,14 +29,15 @@ if (MSVC)
         endforeach()
     endif()
 endif()
+endif()
  
 # TODO: use $<INSTALL_INTERFACE:...> and $<BUILD_INTERFACE:...> if the project becomes installable
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # Embed a font
 
-if (NOT TARGET gpc-font-rasterizer)
-  find_package(gpc-font-rasterizer REQUIRED)
+if (NOT TARGET GPCFontRasterizer)
+  find_package(GPCFontRasterizer REQUIRED)
 endif()
 
 add_custom_command(

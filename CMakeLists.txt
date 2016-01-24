@@ -6,6 +6,7 @@ enable_testing()
 
 # Force static runtime libraries
 
+if (0)
 if (MSVC)
     option(STATICALLY_LINKED_RUNTIMES "Use statically linked runtime libraries" OFF)
     if (STATICALLY_LINKED_RUNTIMES)
@@ -19,10 +20,11 @@ if (MSVC)
         endforeach()
     endif()
 endif()
+endif()
  
 # add_subdirectory(external/SDL2)
 
-add_subdirectory(external/gpc-font-rasterizer/src)
+add_subdirectory(external/GPCFontRasterizer/src)
 
 add_subdirectory(external/libGPCGLUtils/lib)
 
